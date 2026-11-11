@@ -1,0 +1,24 @@
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Database backups
+*.sql
+
+# Local database test
+test_connection.php
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor settings
+.vscode/
+
+# Local database configuration
+config/database.php
