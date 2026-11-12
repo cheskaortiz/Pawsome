@@ -564,8 +564,7 @@ h3 {
     text-align: center;
 }
 
-.section-heading h2,
-.about-copy h2 {
+.section-heading h2 {
     margin: 12px 0 11px;
     font-size: clamp(34px, 4vw, 45px);
     font-weight: 900;
@@ -677,145 +676,6 @@ h3 {
     font-size: 14px;
     font-weight: 600;
     text-align: center;
-}
-
-.about {
-    overflow: hidden;
-    background: var(--yellow-pale);
-}
-
-.about-grid {
-    display: grid;
-    grid-template-columns: .95fr 1.05fr;
-    align-items: center;
-    gap: 100px;
-}
-
-.about-visual {
-    position: relative;
-    display: grid;
-    min-height: 355px;
-    place-items: center;
-}
-
-.about-blob {
-    position: absolute;
-    width: 320px;
-    height: 320px;
-    border-radius: 44% 56% 58% 42% / 52% 44% 56% 48%;
-    background: var(--yellow);
-    transform: rotate(-8deg);
-}
-
-.about-blob::before,
-.about-blob::after {
-    position: absolute;
-    content: "";
-    border-radius: 50%;
-    background: var(--yellow-soft);
-}
-
-.about-blob::before {
-    top: 34px;
-    right: -7px;
-    width: 49px;
-    height: 49px;
-}
-
-.about-blob::after {
-    bottom: 17px;
-    left: 13px;
-    width: 24px;
-    height: 24px;
-    background: var(--blue-light);
-}
-
-.about-card {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    width: min(280px, 85%);
-    min-height: 190px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 25px;
-    border: 1px solid rgba(255, 255, 255, .9);
-    border-radius: 22px;
-    background: rgba(255, 255, 255, .88);
-    box-shadow: 0 15px 40px rgba(74, 81, 89, .12);
-    text-align: center;
-}
-
-.about-card-icon {
-    display: grid;
-    width: 57px;
-    height: 57px;
-    margin-bottom: 13px;
-    place-items: center;
-    border-radius: 18px;
-    color: #769DB8;
-    background: var(--blue-light);
-}
-
-.about-card-icon svg {
-    width: 34px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.6;
-}
-
-.about-card strong {
-    margin-bottom: 3px;
-    font-family: var(--font-heading);
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.about-card > span:last-child {
-    color: var(--ink-soft);
-    font-size: 11px;
-}
-
-.about-paw {
-    position: absolute;
-    z-index: 2;
-    color: #B19443;
-}
-
-.paw-one {
-    top: 31px;
-    right: 14%;
-    font-size: 27px;
-}
-
-.paw-two {
-    bottom: 45px;
-    left: 8%;
-    color: #769DB8;
-    font-size: 23px;
-}
-
-.about-copy {
-    max-width: 490px;
-}
-
-.about-copy h2 {
-    margin-top: 14px;
-}
-
-.about-copy p {
-    margin-bottom: 14px;
-    color: var(--ink-soft);
-    font-size: 14px;
-    line-height: 1.85;
-}
-
-.text-link-purple {
-    margin-top: 9px;
-    color: #769DB8;
 }
 
 .benefits {
@@ -1133,10 +993,6 @@ h3 {
         min-height: auto;
     }
 
-    .about-grid {
-        gap: 55px;
-    }
-
     .cta-card {
         padding-inline: 48px;
     }
@@ -1148,24 +1004,8 @@ h3 {
 }
 
 @media (max-width: 650px) {
-    html {
-        scroll-padding-top: 118px;
-    }
-
     .container {
         width: min(100% - 36px, 480px);
-    }
-
-    .header-inner {
-        min-height: 70px;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0 20px;
-        padding-block: 11px 10px;
-    }
-
-    .brand {
-        margin-right: auto;
     }
 
     .brand-mark {
@@ -1175,28 +1015,6 @@ h3 {
 
     .brand-name {
         font-size: 21px;
-    }
-
-    .main-nav {
-        width: 100%;
-        justify-content: space-between;
-        gap: 12px;
-        padding-top: 8px;
-        border-top: 1px solid #EEE5C9;
-    }
-
-    .nav-link {
-        font-size: 11px;
-    }
-
-    .nav-login {
-        margin-left: 0;
-    }
-
-    .button-small {
-        min-height: 33px;
-        padding-inline: 13px;
-        font-size: 11px;
     }
 
     .hero-container {
@@ -1313,8 +1131,7 @@ h3 {
         margin-bottom: 31px;
     }
 
-    .section-heading h2,
-    .about-copy h2 {
+    .section-heading h2 {
         font-size: 34px;
     }
 
@@ -1360,32 +1177,6 @@ h3 {
     .service-note {
         font-size: 10px;
         line-height: 1.6;
-    }
-
-    .about-grid {
-        grid-template-columns: 1fr;
-        gap: 28px;
-    }
-
-    .about-visual {
-        min-height: 280px;
-    }
-
-    .about-blob {
-        width: 255px;
-        height: 255px;
-    }
-
-    .about-card {
-        min-height: 165px;
-    }
-
-    .about-copy {
-        max-width: none;
-    }
-
-    .about-copy p {
-        font-size: 12px;
     }
 
     .benefits .section-heading {
@@ -1490,21 +1281,49 @@ h3 {
         width: calc(100% - 28px);
     }
 
+    .hero-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 700px) {
+    html {
+        scroll-padding-top: 118px;
+    }
+
+    .header-inner {
+        min-height: 70px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0 20px;
+        padding-block: 11px 10px;
+    }
+
+    .brand {
+        margin-right: auto;
+    }
+
     .main-nav {
-        gap: 7px;
+        width: 100%;
+        justify-content: space-between;
+        gap: 4px;
+        padding-top: 8px;
+        border-top: 1px solid #EEE5C9;
     }
 
     .nav-link {
         font-size: 10px;
     }
 
-    .button-small {
-        padding-inline: 10px;
+    .nav-login {
+        margin-left: 0;
     }
 
-    .hero-actions {
-        align-items: flex-start;
-        flex-direction: column;
+    .button-small {
+        min-height: 33px;
+        padding-inline: 8px;
+        font-size: 11px;
     }
 }
 

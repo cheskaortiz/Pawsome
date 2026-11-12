@@ -13,6 +13,9 @@ $currentYear = date('Y');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/about.css">
+    <link rel="stylesheet" href="assets/css/booking.css">
+    <link rel="stylesheet" href="assets/css/prices.css">
 </head>
 <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -35,8 +38,10 @@ $currentYear = date('Y');
             <nav class="main-nav" aria-label="Main navigation">
                 <a class="nav-link active" href="index.php" aria-current="page">Home</a>
                 <a class="nav-link" href="#services">Services</a>
-                <a class="nav-link" href="#about">About us</a>
-                <a class="nav-link nav-login" href="customer/login.php">Login</a>
+                <a class="nav-link" href="#about">About Us</a>
+                <a class="nav-link" href="#booking">Booking</a>
+                <a class="nav-link" href="#prices">Prices</a>
+                <a class="nav-link nav-login" href="customer/login.php">Log In</a>
                 <a class="button button-small button-primary nav-register" href="customer/register.php">Register</a>
             </nav>
         </div>
@@ -146,29 +151,9 @@ $currentYear = date('Y');
             </div>
         </section>
 
-        <section class="about section-padding" id="about">
-            <div class="container about-grid">
-                <div class="about-visual">
-                    <div class="about-blob"></div>
-                    <div class="about-card">
-                        <span class="about-card-icon" aria-hidden="true">
-                            <svg viewBox="0 0 48 48"><path d="M24 39s-15-9.4-15-21.6A8.3 8.3 0 0 1 24 11a8.3 8.3 0 0 1 15 6.4C39 29.6 24 39 24 39Z"/><path d="M16 23h4l2-4 4 9 2-5h4"/></svg>
-                        </span>
-                        <strong>More time for tail wags</strong>
-                        <span>We make the little details easier.</span>
-                    </div>
-                    <span class="about-paw paw-one" aria-hidden="true">✿</span>
-                    <span class="about-paw paw-two" aria-hidden="true">✦</span>
-                </div>
-                <div class="about-copy">
-                    <span class="eyebrow">Meet Pawsome</span>
-                    <h2>Good care feels <span>easy.</span></h2>
-                    <p>We know your pet is family. Pawsome helps you spend less time juggling details and more time enjoying the happy, freshly-groomed moments.</p>
-                    <p>Conveniently schedule grooming appointments and keep your pet's care records organized in one friendly place. It's a simpler way to stay on top of their grooming routine.</p>
-                    <a class="text-link text-link-purple" href="customer/register.php">Get started with Pawsome <span aria-hidden="true">→</span></a>
-                </div>
-            </div>
-        </section>
+        <?php require __DIR__ . '/includes/about.php'; ?>
+        <?php require __DIR__ . '/includes/booking.php'; ?>
+        <?php require __DIR__ . '/includes/prices.php'; ?>
 
         <section class="benefits section-padding">
             <div class="container">
