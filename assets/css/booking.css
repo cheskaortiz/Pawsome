@@ -14,10 +14,14 @@
 .booking-step {
     min-height: 220px;
     padding: 24px 20px;
-    border: 1px solid #F0E9D5;
+    border: 1px solid var(--blue-medium);
     border-radius: 18px;
     background: #fff;
-    box-shadow: 0 8px 25px rgba(74, 81, 89, .045);
+    box-shadow: 0 8px 25px rgba(74, 81, 89, .08);
+}
+
+.booking-step:nth-child(even) {
+    border-color: var(--yellow-strong);
 }
 
 .booking-step-number {
@@ -27,16 +31,16 @@
     margin-bottom: 19px;
     place-items: center;
     border-radius: 14px;
-    color: #769DB8;
-    background: var(--blue-light);
+    color: var(--ink-on-blue);
+    background: var(--blue);
     font-family: var(--font-heading);
     font-size: 15px;
     font-weight: 900;
 }
 
 .booking-step:nth-child(even) .booking-step-number {
-    color: #9A7B2D;
-    background: var(--yellow-soft);
+    color: var(--ink);
+    background: var(--yellow-strong);
 }
 
 .booking-step h3 {
