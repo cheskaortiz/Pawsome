@@ -72,7 +72,7 @@ $currentYear = date('Y');
 
                 <div class="hero-grid">
                     <figure class="hero-pet hero-pet-cat">
-                        <img src="assets/images/hero-cat.jpg" alt="A friendly black-and-white cat resting its paws on a ledge">
+                        <img src="assets/images/cat-happy.png" alt="A friendly black-and-white cat resting its paws on a ledge">
                         <figcaption>Cat-friendly care</figcaption>
                     </figure>
 
@@ -93,7 +93,7 @@ $currentYear = date('Y');
                     </div>
 
                     <figure class="hero-pet hero-pet-dog">
-                        <img src="assets/images/hero-dog.jpg" alt="A gentle golden retriever enjoying a sunny day">
+                        <img src="assets/images/dog-happy.png" alt="A gentle golden retriever enjoying a sunny day">
                         <figcaption>Good-dog grooming</figcaption>
                     </figure>
                 </div>
