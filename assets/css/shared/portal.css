@@ -1,0 +1,213 @@
+.customer-app {
+    min-height: 100vh;
+    color: var(--ink);
+    background: #fffdf8;
+}
+
+.customer-layout {
+    display: grid;
+    min-height: 100vh;
+    grid-template-columns: 248px minmax(0, 1fr);
+}
+
+.customer-sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+    padding: 28px 18px 20px;
+    border-right: 1px solid var(--line);
+    background: var(--yellow-surface);
+}
+
+.customer-brand {
+    align-self: flex-start;
+    margin: 0 0 40px 8px;
+}
+
+.customer-navigation {
+    display: grid;
+    gap: 7px;
+}
+
+.customer-nav-link {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    gap: 12px;
+    padding: 0 13px;
+    border-radius: 12px;
+    color: #60666d;
+    font-size: 14px;
+    font-weight: 700;
+    transition: color .18s ease, background-color .18s ease;
+}
+
+.customer-nav-link:hover,
+.customer-nav-link.is-active {
+    color: var(--ink);
+    background: rgba(121, 173, 208, .22);
+}
+
+.customer-nav-indicator {
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--blue-deep);
+    border-radius: 50%;
+}
+
+.customer-nav-link.is-active .customer-nav-indicator {
+    border-color: var(--blue-deep);
+    background: var(--blue-deep);
+    box-shadow: 0 0 0 3px rgba(121, 173, 208, .2);
+}
+
+.customer-sidebar-bottom {
+    display: grid;
+    gap: 12px;
+    margin-top: auto;
+    padding: 15px 8px 0;
+    border-top: 1px solid rgba(232, 221, 175, .9);
+}
+
+.customer-public-link {
+    color: var(--blue-deep);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.customer-public-link:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.customer-main-column {
+    display: flex;
+    min-width: 0;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.customer-topbar {
+    display: flex;
+    min-height: 82px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px clamp(22px, 5vw, 64px);
+    border-bottom: 1px solid rgba(232, 221, 175, .7);
+    background: rgba(255, 255, 255, .86);
+}
+
+.customer-topbar-label {
+    color: var(--blue-deep);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.customer-topbar-greeting {
+    margin: 2px 0 0;
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.customer-main {
+    width: min(1120px, 100%);
+    flex: 1;
+    align-self: center;
+    padding: 46px clamp(22px, 5vw, 64px) 56px;
+}
+
+.customer-page-heading {
+    margin-bottom: 27px;
+}
+
+.customer-page-heading h1 {
+    margin-block: 8px;
+    font-size: clamp(34px, 5vw, 48px);
+    font-weight: 900;
+    letter-spacing: -1.7px;
+    line-height: 1.1;
+}
+
+.customer-page-heading h1 span {
+    color: var(--blue-deep);
+}
+
+.customer-page-heading p {
+    margin: 0;
+    color: #69727a;
+}
+
+.customer-footer {
+    padding: 17px clamp(22px, 5vw, 64px);
+    border-top: 1px solid rgba(232, 221, 175, .7);
+    color: #737a80;
+    font-size: 11px;
+    text-align: center;
+}
+
+.customer-footer p {
+    margin: 0;
+}
+
+@media (max-width: 920px) {
+    .customer-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-sidebar {
+        position: static;
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        padding: 14px 20px 11px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .customer-brand {
+        margin: 0 0 13px;
+    }
+
+    .customer-navigation {
+        display: flex;
+        width: 100%;
+        min-width: 0;
+        flex-wrap: wrap;
+        overflow: visible;
+        gap: 5px;
+        padding-bottom: 0;
+    }
+
+    .customer-nav-link {
+        min-height: 42px;
+        flex: 0 0 auto;
+        gap: 7px;
+        padding-inline: 8px;
+        font-size: 11px;
+    }
+
+    .customer-sidebar-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 10px;
+        padding: 8px 3px 0;
+    }
+
+    .customer-topbar {
+        min-height: 68px;
+    }
+}
+
+@media (max-width: 640px) {
+    .customer-main {
+        padding-block: 27px 38px;
+    }
+}

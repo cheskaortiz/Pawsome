@@ -311,7 +311,38 @@
     background: #d78a7e;
 }
 
-.customer-status--unknown {
+.admin-app .customer-status {
+    display: inline-block;
+    padding: 4px 9px;
+    border-radius: 99px;
+    color: #466881;
+    background: #e8f3fa;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.admin-app .customer-status--pending {
+    color: #765a20;
+    background: #fff3cc;
+}
+
+.admin-app .customer-status--confirmed {
+    color: #315d78;
+    background: #e4f2fb;
+}
+
+.admin-app .customer-status--completed {
+    color: #285d38;
+    background: #e5f5e9;
+}
+
+.admin-app .customer-status--cancelled,
+.admin-app .customer-status--rejected {
+    color: #843d35;
+    background: #fbe9e6;
+}
+
+.admin-app .customer-status--unknown {
     color: #5f6870;
     background: #edf0f1;
 }

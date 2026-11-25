@@ -22,7 +22,8 @@ $customerNavigation = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/customer.css">
+    <link rel="stylesheet" href="../assets/css/shared/portal.css">
+    <link rel="stylesheet" href="../assets/css/customer/customer.css">
 </head>
 <body class="customer-app">
     <a class="skip-link" href="#customer-main">Skip to content</a>

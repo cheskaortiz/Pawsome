@@ -94,8 +94,8 @@ $statusTotal = array_sum($statusCounts);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/customer.css">
-    <link rel="stylesheet" href="../assets/css/admin.css">
+    <link rel="stylesheet" href="../assets/css/shared/portal.css">
+    <link rel="stylesheet" href="../assets/css/admin/dashboard.css">
 </head>
 <body class="customer-app admin-app">
     <a class="skip-link" href="#admin-main">Skip to content</a>
