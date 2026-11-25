@@ -42,7 +42,7 @@ try {
                a.appointment_date > ?
                OR (a.appointment_date = ? AND a.appointment_time >= ?)
            )
-           AND a.status IN ('Pending', 'Confirmed')
+           AND a.status IN ('Pending', 'Confirmed', 'In Progress', 'Ready for Pickup')
          ORDER BY a.appointment_date ASC, a.appointment_time ASC
          LIMIT 3"
     );

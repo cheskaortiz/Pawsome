@@ -96,7 +96,34 @@
 }
 
 .admin-appointments-table {
-    min-width: 1160px;
+    min-width: 1280px;
+}
+
+.admin-appointment-manage {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 11px;
+    border: 1px solid #eadca9;
+    border-radius: 8px;
+    color: #675728;
+    background: #fff9e6;
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color .18s ease, border-color .18s ease;
+}
+
+.admin-appointment-manage:hover {
+    border-color: #dac77f;
+    background: #fff3cc;
+}
+
+.admin-appointment-manage:focus-visible {
+    outline: 3px solid rgba(89, 153, 195, .45);
+    outline-offset: 2px;
 }
 
 .admin-appointment-actions {
@@ -302,6 +329,18 @@
 .admin-appointment-action:hover {
     border-color: #a9cce3;
     background: #eaf4fb;
+}
+
+.admin-appointment-action.is-start {
+    border-color: #c9deeb;
+    color: #315d78;
+    background: #f2f8fc;
+}
+
+.admin-appointment-action.is-ready {
+    border-color: #b7d9bd;
+    color: #285d38;
+    background: #edf8ef;
 }
 
 .admin-appointment-action.is-reject,

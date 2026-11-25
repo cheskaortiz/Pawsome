@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/database.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'appointments';
-$statusFilters = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'Rejected'];
+$statusFilters = ['All', 'Pending', 'Confirmed', 'In Progress', 'Ready for Pickup', 'Completed', 'Cancelled', 'Rejected'];
 $manilaTimezone = new DateTimeZone('Asia/Manila');
 $manilaNow = new DateTimeImmutable('now', $manilaTimezone);
 $todayManila = $manilaNow->format('Y-m-d');
@@ -91,33 +91,7 @@ if (!$isAppointmentFragment) {
     }
 }
 
-$actionTransitions = [
-    'confirm' => [
-        'target' => 'Confirmed',
-        'condition' => "a.status = 'Pending'",
-        'success' => 'The appointment has been confirmed.',
-    ],
-    'reject' => [
-        'target' => 'Rejected',
-        'condition' => "a.status = 'Pending'",
-        'success' => 'The appointment has been rejected.',
-    ],
-    'complete' => [
-        'target' => 'Completed',
-        'condition' => "a.status = 'Confirmed'",
-        'success' => 'The appointment has been marked completed.',
-    ],
-    'cancel' => [
-        'target' => 'Cancelled',
-        'condition' => "a.status IN ('Pending', 'Confirmed')
-            AND NOT EXISTS (
-                SELECT 1
-                FROM grooming_records AS gr
-                WHERE gr.appointment_id = a.appointment_id
-            )",
-        'success' => 'The appointment has been cancelled.',
-    ],
-];
+$actionTransitions = require __DIR__ . '/../includes/admin_appointment_workflow.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!auth_csrf_is_valid($_POST['csrf_token'] ?? null)) {
@@ -137,41 +111,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $transition = $actionTransitions[$action];
+    $returnToDetails = auth_post_string('return_to') === 'details';
+    $detailsReturnUrl = auth_post_string('return_url');
     try {
-        $targetStatus = $transition['target'];
-        if ($action === 'complete') {
-            $completionCheckTime = $manilaNow->format('Y-m-d H:i:s');
-            $statement = $conn->prepare(
-                'UPDATE appointments AS a
-                 INNER JOIN services AS s ON s.service_id = a.service_id
-                 SET a.status = ?
-                 WHERE a.appointment_id = ?
-                   AND ' . $transition['condition'] . '
-                   AND DATE_ADD(
-                       TIMESTAMP(a.appointment_date, a.appointment_time),
-                       INTERVAL s.duration MINUTE
-                   ) <= ?'
-            );
-            $statement->bind_param('sis', $targetStatus, $appointmentId, $completionCheckTime);
-        } else {
-            $statement = $conn->prepare(
-                'UPDATE appointments AS a
-                 SET a.status = ?
-                 WHERE a.appointment_id = ?
-                   AND ' . $transition['condition']
-            );
-            $statement->bind_param('si', $targetStatus, $appointmentId);
+        $allowedStatuses = $transition['from'];
+        $statusPlaceholders = implode(', ', array_fill(0, count($allowedStatuses), '?'));
+        $groomingRecordGuard = !empty($transition['requires_no_grooming_record'])
+            ? ' AND NOT EXISTS (
+                    SELECT 1
+                    FROM grooming_records AS gr
+                    WHERE gr.appointment_id = a.appointment_id
+                )'
+            : '';
+        $statement = $conn->prepare(
+            'UPDATE appointments AS a
+             SET a.status = ?
+             WHERE a.appointment_id = ?
+               AND a.status IN (' . $statusPlaceholders . ')'
+               . $groomingRecordGuard
+        );
+        $parameters = array_merge([$transition['target'], $appointmentId], $allowedStatuses);
+        $parameterTypes = 'si' . str_repeat('s', count($allowedStatuses));
+        $bindArguments = [$parameterTypes];
+        foreach (array_keys($parameters) as $parameterIndex) {
+            $bindArguments[] = &$parameters[$parameterIndex];
         }
+        call_user_func_array([$statement, 'bind_param'], $bindArguments);
         $statement->execute();
         $updated = $statement->affected_rows === 1;
         $statement->close();
 
         if ($updated) {
-            auth_set_flash('appointments_success', $transition['success']);
+            auth_set_flash('appointments_success', 'Appointment status updated to ' . $transition['target'] . '.');
         } else {
             $statement = $conn->prepare(
-                'SELECT a.status, a.appointment_date, a.appointment_time, s.duration,
-                        EXISTS (
+                'SELECT a.status, EXISTS (
                             SELECT 1
                             FROM grooming_records AS gr
                             WHERE gr.appointment_id = a.appointment_id
@@ -188,16 +162,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$appointment) {
                 $message = 'That appointment could not be found.';
-            } elseif ($action === 'cancel' && (int) $appointment['has_grooming_record'] === 1) {
+            } elseif (
+                !empty($transition['requires_no_grooming_record'])
+                && (int) $appointment['has_grooming_record'] === 1
+            ) {
                 $message = 'This appointment cannot be cancelled because a grooming record is already linked to it.';
-            } elseif ($action === 'complete' && $appointment['status'] === 'Confirmed') {
-                $serviceEndsAt = (new DateTimeImmutable(
-                    (string) $appointment['appointment_date'] . ' ' . (string) $appointment['appointment_time'],
-                    $manilaTimezone
-                ))->modify('+' . (int) $appointment['duration'] . ' minutes');
-                $message = $serviceEndsAt > $manilaNow
-                    ? 'This appointment can only be marked completed after its scheduled service time has ended.'
-                    : 'The appointment status has changed or this action is not allowed for its current status.';
             } else {
                 $message = 'The appointment status has changed or this action is not allowed for its current status.';
             }
@@ -208,7 +177,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         auth_set_flash('appointments_error', 'We could not update this appointment right now. Please try again.');
     }
 
-    header('Location: ' . $returnUrl, true, 303);
+    $redirectUrl = $returnToDetails
+        ? 'appointment-details.php?id=' . (int) $appointmentId
+            . ($detailsReturnUrl !== '' ? '&return=' . rawurlencode($detailsReturnUrl) : '')
+        : $returnUrl;
+    header('Location: ' . $redirectUrl, true, 303);
     exit;
 }
 
@@ -288,21 +261,12 @@ try {
 $statusClasses = [
     'Pending' => 'pending',
     'Confirmed' => 'confirmed',
+    'In Progress' => 'in-progress',
+    'Ready for Pickup' => 'ready-for-pickup',
     'Completed' => 'completed',
     'Cancelled' => 'cancelled',
     'Rejected' => 'rejected',
     'Unknown' => 'unknown',
-];
-$actionsByStatus = [
-    'Pending' => [
-        ['confirm', 'Confirm', 'confirm', 'Confirm this appointment?'],
-        ['reject', 'Reject', 'reject', 'Reject this appointment?'],
-        ['cancel', 'Cancel', 'cancel', 'Cancel this appointment?'],
-    ],
-    'Confirmed' => [
-        ['complete', 'Mark Completed', 'complete', 'Mark this appointment as completed?'],
-        ['cancel', 'Cancel', 'cancel', 'Cancel this appointment?'],
-    ],
 ];
 $csrfToken = auth_csrf_token();
 if ($isAppointmentFragment) {

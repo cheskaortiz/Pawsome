@@ -162,7 +162,7 @@ function customer_booking_get_slot_options(
          FROM appointments AS a
          INNER JOIN services AS s ON s.service_id = a.service_id
          WHERE a.appointment_date = ?
-           AND a.status IN ('Pending', 'Confirmed')";
+           AND a.status IN ('Pending', 'Confirmed', 'In Progress', 'Ready for Pickup')";
     if ($lockExistingAppointments) {
         $sql .= ' FOR UPDATE';
     }

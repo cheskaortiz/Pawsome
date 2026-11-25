@@ -400,6 +400,16 @@
     background: #e4f2fb;
 }
 
+.customer-status--in-progress {
+    color: #315d78;
+    background: #dceef8;
+}
+
+.customer-status--ready-for-pickup {
+    color: #285d38;
+    background: #e5f5e9;
+}
+
 .customer-status--completed {
     color: #285d38;
     background: #e5f5e9;

@@ -304,6 +304,14 @@
     background: var(--blue);
 }
 
+.admin-status-fill--in-progress {
+    background: #6f9fc0;
+}
+
+.admin-status-fill--ready-for-pickup {
+    background: #75b887;
+}
+
 .admin-status-fill--completed {
     background: #75b887;
 }
@@ -332,6 +340,16 @@
 .admin-app .customer-status--confirmed {
     color: #315d78;
     background: #e4f2fb;
+}
+
+.admin-app .customer-status--in-progress {
+    color: #315d78;
+    background: #dceef8;
+}
+
+.admin-app .customer-status--ready-for-pickup {
+    color: #285d38;
+    background: #e5f5e9;
 }
 
 .admin-app .customer-status--completed {

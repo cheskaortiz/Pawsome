@@ -130,6 +130,8 @@ require __DIR__ . '/../includes/customer_header.php';
                     $statusClasses = [
                         'Pending' => 'pending',
                         'Confirmed' => 'confirmed',
+                        'In Progress' => 'in-progress',
+                        'Ready for Pickup' => 'ready-for-pickup',
                         'Completed' => 'completed',
                         'Cancelled' => 'cancelled',
                         'Rejected' => 'rejected',

@@ -1,6 +1,11 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
-auth_require_customer();
+$isAdmin = ($_SESSION['role'] ?? null) === 'admin';
+if ($isAdmin) {
+    auth_require_admin();
+} else {
+    auth_require_customer();
+}
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/pet_uploads.php';
 
@@ -15,15 +20,25 @@ if ($petId === false || !is_string($type) || !in_array($type, ['photo', 'vaccina
     exit('File not found.');
 }
 
-$customerId = (int) $_SESSION['user_id'];
 try {
-    $statement = $conn->prepare(
-        'SELECT photo_path, vaccination_proof_path
-         FROM pets
-         WHERE pet_id = ? AND user_id = ?
-         LIMIT 1'
-    );
-    $statement->bind_param('ii', $petId, $customerId);
+    if ($isAdmin) {
+        $statement = $conn->prepare(
+            'SELECT photo_path, vaccination_proof_path
+             FROM pets
+             WHERE pet_id = ?
+             LIMIT 1'
+        );
+        $statement->bind_param('i', $petId);
+    } else {
+        $customerId = (int) $_SESSION['user_id'];
+        $statement = $conn->prepare(
+            'SELECT photo_path, vaccination_proof_path
+             FROM pets
+             WHERE pet_id = ? AND user_id = ?
+             LIMIT 1'
+        );
+        $statement->bind_param('ii', $petId, $customerId);
+    }
     $statement->execute();
     $pet = $statement->get_result()->fetch_assoc();
     $statement->close();

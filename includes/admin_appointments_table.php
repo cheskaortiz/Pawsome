@@ -23,6 +23,7 @@
                         <th scope="col">Pet</th>
                         <th scope="col">Service</th>
                         <th scope="col">Status</th>
+                        <th scope="col">Manage</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
@@ -39,14 +40,16 @@
                             $manilaTimezone
                         );
                         $requestedAt = new DateTimeImmutable((string) $appointment['created_at'], $manilaTimezone);
-                        $availableActions = $actionsByStatus[$status] ?? [];
-                        $serviceEndsAt = $appointmentDateTime->modify('+' . (int) $appointment['duration'] . ' minutes');
-                        $completionAvailable = $serviceEndsAt <= $manilaNow;
-                        if ($status === 'Confirmed' && !$completionAvailable) {
-                            $availableActions = array_values(array_filter(
-                                $availableActions,
-                                static fn (array $availableAction): bool => $availableAction[0] !== 'complete'
-                            ));
+                        $availableActions = [];
+                        foreach ($actionTransitions as $actionKey => $transition) {
+                            if (in_array($status, $transition['from'], true)) {
+                                $availableActions[] = [
+                                    $actionKey,
+                                    $transition['label'],
+                                    $transition['button_class'],
+                                    $transition['confirmation_prompt'],
+                                ];
+                            }
                         }
                         $hasGroomingRecord = (int) $appointment['has_grooming_record'] === 1;
                         if ($hasGroomingRecord) {
@@ -85,6 +88,15 @@
                                     <?= auth_escape($statusLabel) ?>
                                 </span>
                             </td>
+                            <td>
+                                <a
+                                    class="admin-appointment-manage"
+                                    href="appointment-details.php?<?= auth_escape(http_build_query([
+                                        'id' => (int) $appointment['appointment_id'],
+                                        'return' => $returnUrl,
+                                    ])) ?>"
+                                >Manage</a>
+                            </td>
                             <td class="admin-appointment-actions">
                                 <button
                                     class="admin-appointment-details-trigger"
@@ -122,9 +134,6 @@
                                             </form>
                                         <?php endforeach; ?>
                                     </div>
-                                <?php endif; ?>
-                                <?php if ($status === 'Confirmed' && !$completionAvailable): ?>
-                                    <span class="admin-appointment-action-hint">Completion is available after the scheduled service time.</span>
                                 <?php endif; ?>
                             </td>
                         </tr>

@@ -10,6 +10,8 @@ $summaryLoadError = false;
 $statusCounts = [
     'Pending' => 0,
     'Confirmed' => 0,
+    'In Progress' => 0,
+    'Ready for Pickup' => 0,
     'Completed' => 0,
     'Cancelled' => 0,
     'Rejected' => 0,
@@ -76,6 +78,8 @@ try {
 $statusClasses = [
     'Pending' => 'pending',
     'Confirmed' => 'confirmed',
+    'In Progress' => 'in-progress',
+    'Ready for Pickup' => 'ready-for-pickup',
     'Completed' => 'completed',
     'Cancelled' => 'cancelled',
     'Rejected' => 'rejected',
