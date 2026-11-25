@@ -34,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->close();
 
             if ($user && password_verify($password, $user['password'])) {
-                if ($user['role'] !== 'customer') {
-                    $error = 'This sign-in is for customer accounts only.';
+                if (!in_array($user['role'], ['admin', 'customer'], true)) {
+                    $error = 'The username/email or password you entered is incorrect.';
                 } else {
                     session_regenerate_id(true);
                     $_SESSION['user_id'] = (int) $user['user_id'];
@@ -44,7 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['role'] = $user['role'];
 
-                    header('Location: ' . PAWSOME_BASE_PATH . '/customer/dashboard.php', true, 303);
+                    $destination = $user['role'] === 'admin'
+                        ? '/admin/dashboard.php'
+                        : '/customer/dashboard.php';
+                    header('Location: ' . PAWSOME_BASE_PATH . $destination, true, 303);
                     exit;
                 }
             }

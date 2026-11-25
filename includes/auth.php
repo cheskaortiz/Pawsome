@@ -30,9 +30,14 @@ function auth_is_logged_in(): bool
 function auth_redirect_logged_in(): void
 {
     if (auth_is_logged_in()) {
-        $destination = ($_SESSION['role'] ?? null) === 'customer'
-            ? '/customer/dashboard.php'
-            : '/index.php';
+        $role = $_SESSION['role'] ?? null;
+        if ($role === 'admin') {
+            $destination = '/admin/dashboard.php';
+        } elseif ($role === 'customer') {
+            $destination = '/customer/dashboard.php';
+        } else {
+            $destination = '/index.php';
+        }
         header('Location: ' . PAWSOME_BASE_PATH . $destination, true, 303);
         exit;
     }
@@ -53,6 +58,16 @@ function auth_require_customer(): void
     if (($_SESSION['role'] ?? null) !== 'customer') {
         http_response_code(403);
         exit('This section is available to customer accounts only.');
+    }
+}
+
+function auth_require_admin(): void
+{
+    auth_require_login();
+
+    if (($_SESSION['role'] ?? null) !== 'admin') {
+        http_response_code(403);
+        exit('This section is available to admin accounts only.');
     }
 }
 
