@@ -8,6 +8,11 @@ node_modules/
 
 # Database backups
 *.sql
+!database/add_pet_profile_fields.sql
+
+# Uploaded pet photos and vaccination documents
+uploads/pets/*
+!uploads/pets/.htaccess
 
 # Local database test
 test_connection.php
