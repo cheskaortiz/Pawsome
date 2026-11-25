@@ -50,8 +50,11 @@
 
 .admin-main {
     display: grid;
+    width: min(1280px, 100%);
     align-content: start;
+    align-self: flex-start;
     gap: 25px;
+    padding-inline: clamp(24px, 3vw, 42px);
 }
 
 .admin-page-heading {

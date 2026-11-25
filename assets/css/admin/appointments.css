@@ -1,0 +1,364 @@
+.admin-appointments-main {
+    gap: 20px;
+}
+
+.admin-appointments-feedback {
+    margin: 0;
+    padding: 12px 15px;
+    border: 1px solid;
+    border-radius: 11px;
+    font-size: 13px;
+}
+
+.admin-appointments-feedback.is-success {
+    border-color: #b7d9bd;
+    color: #285d38;
+    background: #edf8ef;
+}
+
+.admin-appointments-feedback.is-error {
+    border-color: #e8b8b2;
+    color: #843d35;
+    background: #fdf2ef;
+}
+
+.admin-appointment-summary-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.admin-appointment-summary-grid .admin-overview-card {
+    padding: 14px 13px;
+    border-radius: 15px;
+}
+
+.admin-appointment-summary-grid .admin-overview-label {
+    min-height: 32px;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.admin-appointment-summary-grid .admin-overview-value {
+    margin-top: 3px;
+    font-size: clamp(24px, 2.1vw, 30px);
+}
+
+.admin-appointment-summary-grid .admin-overview-description {
+    min-height: 27px;
+    margin-top: 6px;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.admin-appointment-filter-form {
+    display: grid;
+    grid-template-columns: minmax(190px, 1.7fr) repeat(4, minmax(110px, 1fr));
+    align-items: end;
+    gap: 12px;
+    padding: 20px;
+}
+
+.admin-appointment-filter-field {
+    min-width: 0;
+}
+
+.admin-appointment-filter-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #59646c;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.admin-appointment-filter-field input,
+.admin-appointment-filter-field select {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 11px;
+    border: 1px solid #e1e5e5;
+    border-radius: 10px;
+    color: #505961;
+    background: #fff;
+    font: inherit;
+    font-size: 12px;
+}
+
+.admin-appointment-filter-field input:focus,
+.admin-appointment-filter-field select:focus {
+    border-color: #8db9d6;
+    outline: 3px solid rgba(89, 153, 195, .18);
+}
+
+.admin-appointment-details-trigger:focus-visible,
+.admin-appointment-action:focus-visible {
+    outline: 3px solid rgba(89, 153, 195, .45);
+    outline-offset: 2px;
+}
+
+.admin-appointments-table {
+    min-width: 1160px;
+}
+
+.admin-appointment-actions {
+    min-width: 210px;
+    vertical-align: top !important;
+}
+
+.admin-appointment-details-trigger {
+    min-height: 32px;
+    padding: 6px 10px;
+    border: 1px solid #c9deeb;
+    border-radius: 8px;
+    color: #315d78;
+    background: #f2f8fc;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color .18s ease, border-color .18s ease;
+}
+
+.admin-appointment-details-trigger:hover {
+    border-color: #9dc3db;
+    background: #eaf4fb;
+}
+
+.admin-appointment-dialog {
+    width: min(760px, calc(100vw - 32px));
+    max-width: none;
+    max-height: min(86vh, 760px);
+    margin: auto;
+    padding: 0;
+    border: 1px solid #e6e9e9;
+    border-radius: 20px;
+    color: var(--ink, #39464d);
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(32, 48, 57, .24);
+    overflow: auto;
+}
+
+.admin-appointment-dialog::backdrop {
+    background: rgba(32, 43, 49, .48);
+    backdrop-filter: blur(3px);
+}
+
+.admin-appointment-dialog-content {
+    padding: 26px;
+}
+
+.admin-appointment-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9eeee;
+}
+
+.admin-appointment-dialog-header .eyebrow {
+    display: inline-block;
+    margin-bottom: 6px;
+    color: #71818a;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.admin-appointment-dialog-header h2 {
+    margin: 0;
+    color: var(--ink, #39464d);
+    font-size: clamp(20px, 3vw, 26px);
+}
+
+.admin-appointment-dialog-header p {
+    margin: 7px 0 0;
+    color: #78838a;
+    font-size: 12px;
+}
+
+.admin-appointment-dialog-header p span {
+    color: #315d78;
+    font-weight: 800;
+}
+
+.admin-appointment-dialog-close {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid #e2e8e9;
+    border-radius: 50%;
+    color: #58656c;
+    background: #f8fbfc;
+    font: inherit;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.admin-appointment-dialog-close:hover {
+    border-color: #c8dce8;
+    color: #315d78;
+    background: #eef6fb;
+}
+
+.admin-appointment-dialog-close:focus-visible {
+    outline: 3px solid rgba(89, 153, 195, .45);
+    outline-offset: 2px;
+}
+
+.admin-appointment-dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding-top: 20px;
+}
+
+.admin-appointment-dialog-section {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e8eeee;
+    border-radius: 13px;
+    background: #fbfdfe;
+}
+
+.admin-appointment-dialog-section h3 {
+    margin: 0 0 12px;
+    color: #315d78;
+    font-size: 13px;
+}
+
+.admin-appointment-dialog-section dl {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+}
+
+.admin-appointment-dialog-section dl > div {
+    display: grid;
+    grid-template-columns: minmax(90px, .7fr) minmax(0, 1.3fr);
+    gap: 10px;
+}
+
+.admin-appointment-dialog-section dt {
+    color: #78838a;
+    font-size: 11px;
+}
+
+.admin-appointment-dialog-section dd {
+    min-width: 0;
+    margin: 0;
+    color: #46535a;
+    font-size: 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.admin-appointment-dialog-notes {
+    margin: 0;
+    color: #58656c;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.admin-appointment-action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.admin-appointment-action-group form {
+    margin: 0;
+}
+
+.admin-appointment-action-hint {
+    display: block;
+    max-width: 190px;
+    margin-top: 8px;
+    color: #81888d;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.admin-appointment-action {
+    min-height: 32px;
+    padding: 5px 9px;
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    color: #466881;
+    background: #f7fbfd;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.admin-appointment-action:hover {
+    border-color: #a9cce3;
+    background: #eaf4fb;
+}
+
+.admin-appointment-action.is-reject,
+.admin-appointment-action.is-cancel {
+    border-color: #efcfca;
+    color: #843d35;
+    background: #fff8f6;
+}
+
+.admin-appointment-action.is-reject:hover,
+.admin-appointment-action.is-cancel:hover {
+    border-color: #e8b8b2;
+    background: #fdf2ef;
+}
+
+@media (max-width: 1120px) {
+    .admin-appointment-summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .admin-appointment-filter-form {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-appointment-search-field {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 760px) {
+    .admin-appointment-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-appointment-filter-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 11px;
+        padding: 16px;
+    }
+
+    .admin-appointment-search-field {
+        grid-column: 1 / -1;
+    }
+
+    .admin-appointment-dialog-content {
+        padding: 20px;
+    }
+
+    .admin-appointment-dialog-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 400px) {
+    .admin-appointment-summary-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
