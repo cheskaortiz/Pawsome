@@ -3,10 +3,11 @@
 function grooming_get_available_services(mysqli $conn): array
 {
     $result = $conn->query(
-        "SELECT service_id, species, category, service_name, description, price, duration
+        "SELECT service_id, species, pet_size, category, service_name, description,
+                price, price_note, duration
          FROM services
          WHERE status = 'Available' AND duration > 0
-         ORDER BY species, category, service_name, service_id"
+         ORDER BY species, category, service_name, pet_size, service_id"
     );
     $services = $result->fetch_all(MYSQLI_ASSOC);
     $result->free();
@@ -16,7 +17,7 @@ function grooming_get_available_services(mysqli $conn): array
 
 function grooming_group_services_by_species(array $services): array
 {
-    $grouped = ['Dog' => [], 'Cat' => []];
+    $grouped = ['Dog' => [], 'Cat' => [], 'Other' => []];
     foreach ($services as $service) {
         $species = (string) $service['species'];
         if (!array_key_exists($species, $grouped)) {
@@ -31,4 +32,16 @@ function grooming_group_services_by_species(array $services): array
     }
 
     return $grouped;
+}
+
+function grooming_format_service_price(array $service): string
+{
+    if ($service['price'] === null) {
+        return 'Not provided';
+    }
+
+    $price = '₱' . number_format((float) $service['price'], 2);
+    $priceNote = trim((string) ($service['price_note'] ?? ''));
+
+    return $priceNote === '' ? $price : $price . ' (' . $priceNote . ')';
 }

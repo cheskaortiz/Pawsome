@@ -7,7 +7,7 @@ require_once __DIR__ . '/../includes/grooming_price_data.php';
 $pageTitle = 'Pricelist';
 $activeCustomerPage = 'pricelist';
 $services = [];
-$servicesBySpecies = ['Dog' => [], 'Cat' => []];
+$servicesBySpecies = ['Dog' => [], 'Cat' => [], 'Other' => []];
 $loadError = false;
 
 try {
@@ -33,7 +33,7 @@ require __DIR__ . '/../includes/customer_header.php';
 <?php foreach ($servicesBySpecies as $species => $categories): ?>
     <section class="customer-pricelist-category" aria-labelledby="pricelist-species-<?= auth_escape(strtolower($species)) ?>">
         <div class="customer-section-heading">
-            <h2 id="pricelist-species-<?= auth_escape(strtolower($species)) ?>"><?= auth_escape($species) ?> Grooming Prices</h2>
+            <h2 id="pricelist-species-<?= auth_escape(strtolower($species)) ?>"><?= auth_escape($species === 'Other' ? 'Other Small Animal' : $species) ?> Grooming Prices</h2>
         </div>
         <?php if (!$categories && !$loadError): ?>
             <p class="customer-info" role="status">No available <?= auth_escape(strtolower($species)) ?> grooming services are listed right now.</p>
@@ -43,18 +43,30 @@ require __DIR__ . '/../includes/customer_header.php';
                 <div class="customer-section-heading">
                     <h3><?= auth_escape($categoryName) ?></h3>
                 </div>
-                <div class="customer-service-grid">
-                    <?php foreach ($categoryServices as $service): ?>
-                        <article class="customer-service-card">
-                            <span class="customer-service-icon" aria-hidden="true">✦</span>
-                            <h4><?= auth_escape((string) $service['service_name']) ?></h4>
-                            <p><?= auth_escape((string) $service['description']) ?></p>
-                            <div class="customer-service-meta">
-                                <strong>₱<?= auth_escape(number_format((float) $service['price'], 2)) ?></strong>
-                                <span><?= (int) $service['duration'] ?> min</span>
-                            </div>
-                        </article>
-                    <?php endforeach; ?>
+                <div class="customer-price-table-wrap">
+                    <table class="customer-price-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Service</th>
+                                <th scope="col">Duration</th>
+                                <th scope="col">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($categoryServices as $service): ?>
+                                <tr>
+                                    <td>
+                                        <?= auth_escape((string) $service['service_name']) ?>
+                                        <?php if ($service['pet_size'] !== 'Any'): ?>
+                                            <span class="customer-price-size">(<?= auth_escape((string) $service['pet_size']) ?>)</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= (int) $service['duration'] ?> min</td>
+                                    <td><?= auth_escape(grooming_format_service_price($service)) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </section>
             <?php endforeach; ?>

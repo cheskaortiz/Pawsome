@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/grooming_price_data.php';
 
 $pageTitle = 'Appointments';
 $activeCustomerPage = 'appointments';
@@ -59,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $statement = $conn->prepare(
         "SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
-                p.pet_name, s.service_name, s.price AS total_price,
+            p.pet_name, s.service_name, s.price AS total_price, s.price_note,
                 CASE
                     WHEN a.status IN ('Pending', 'Confirmed')
                      AND NOT EXISTS (
@@ -144,7 +145,10 @@ require __DIR__ . '/../includes/customer_header.php';
                         </td>
                         <td><?= auth_escape((string) $appointment['pet_name']) ?></td>
                         <td><?= auth_escape((string) $appointment['service_name']) ?></td>
-                        <td>₱<?= auth_escape(number_format((float) $appointment['total_price'], 2)) ?></td>
+                        <td><?= auth_escape(grooming_format_service_price([
+                            'price' => $appointment['total_price'],
+                            'price_note' => $appointment['price_note'],
+                        ])) ?></td>
                         <td><span class="customer-status customer-status--<?= auth_escape($statusClass) ?>"><?= auth_escape($statusLabel) ?></span></td>
                         <td>
                             <?php if ((int) $appointment['can_cancel'] === 1): ?>

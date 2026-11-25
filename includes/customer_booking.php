@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/grooming_price_data.php';
+
 function customer_booking_clear_selection(): void
 {
     unset(
@@ -15,10 +17,10 @@ function customer_booking_clear_selection(): void
 function customer_booking_service_categories(): array
 {
     return [
-        'Basic Bath',
-        'Full Grooming',
-        'Haircut & Styling',
-        'Nail Trimming',
+        'Basic Groom',
+        'Premium Groom',
+        'A La Carte Services (Flat Rate)',
+        'A La Carte Services (Size-Dependent)',
     ];
 }
 
@@ -32,13 +34,23 @@ function customer_booking_get_selection(mysqli $conn, int $customerId): ?array
     }
 
     $statement = $conn->prepare(
-        "SELECT p.pet_id, p.pet_name, p.species, p.breed, p.photo_path,
-                s.service_id, s.species AS service_species, s.category,
-                s.service_name, s.description, s.price, s.duration
+        "SELECT p.pet_id, p.pet_name, p.species, p.breed, p.breed_size, p.photo_path,
+                s.service_id, s.species AS service_species, s.pet_size, s.category,
+                s.service_name, s.description, s.price, s.price_note, s.duration
          FROM pets AS p
-         INNER JOIN services AS s ON s.service_id = ? AND s.species = p.species
+         INNER JOIN services AS s
+            ON s.service_id = ?
+           AND s.species = p.species
+           AND (s.pet_size = 'Any' OR s.pet_size = p.breed_size)
          WHERE p.pet_id = ?
            AND p.user_id = ?
+           AND (p.species <> 'Dog' OR p.breed_size IN ('Small', 'Medium', 'Large', 'Giant'))
+           AND s.category IN (
+               'Basic Groom',
+               'Premium Groom',
+               'A La Carte Services (Flat Rate)',
+               'A La Carte Services (Size-Dependent)'
+           )
            AND s.status = 'Available'
            AND s.duration > 0
          LIMIT 1"
@@ -117,6 +129,7 @@ function customer_booking_slot_times(): array
         '10:00:00',
         '10:30:00',
         '11:00:00',
+        '11:30:00',
         '13:00:00',
         '13:30:00',
         '14:00:00',

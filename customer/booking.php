@@ -73,6 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          INNER JOIN pets AS p ON p.pet_id = ? AND p.user_id = ?
                          WHERE s.service_id = ?
                            AND s.species = p.species
+                           AND (s.pet_size = 'Any' OR s.pet_size = p.breed_size)
+                           AND (p.species <> 'Dog' OR p.breed_size IN ('Small', 'Medium', 'Large', 'Giant'))
+                           AND s.category IN (
+                               'Basic Groom',
+                               'Premium Groom',
+                               'A La Carte Services (Flat Rate)',
+                               'A La Carte Services (Size-Dependent)'
+                           )
                            AND s.status = 'Available'
                            AND s.duration > 0
                          LIMIT 1"
@@ -122,7 +130,7 @@ $selectedServiceId = isset($_SESSION['booking_service_id']) && is_int($_SESSION[
 
 try {
     $statement = $conn->prepare(
-        'SELECT pet_id, pet_name, species, breed, photo_path
+        'SELECT pet_id, pet_name, species, breed, breed_size, photo_path
          FROM pets
          WHERE user_id = ?
          ORDER BY created_at DESC, pet_id DESC'
@@ -153,18 +161,37 @@ if (!$loadError && $selectedPetId !== null) {
 
 $serviceLoadError = false;
 if (!$loadError && $selectedPet !== null) {
+    $petSizeMissing = $selectedPet['species'] === 'Dog'
+        && !in_array($selectedPet['breed_size'], ['Small', 'Medium', 'Large', 'Giant'], true);
     try {
-        $serviceSpecies = (string) $selectedPet['species'];
-        $statement = $conn->prepare(
-            "SELECT service_id, species, category, service_name, description, price, duration
-             FROM services
-             WHERE species = ? AND status = 'Available' AND duration > 0
-             ORDER BY category, service_name, service_id"
-        );
-        $statement->bind_param('s', $serviceSpecies);
-        $statement->execute();
-        $services = $statement->get_result()->fetch_all(MYSQLI_ASSOC);
-        $statement->close();
+        if (!$petSizeMissing && in_array($selectedPet['species'], ['Dog', 'Cat', 'Other'], true)) {
+            $statement = $conn->prepare(
+                "SELECT s.service_id, s.species, s.pet_size, s.category, s.service_name,
+                        s.description, s.price, s.price_note, s.duration, s.status
+                 FROM services AS s
+                 INNER JOIN pets AS p ON p.pet_id = ? AND p.user_id = ?
+                 WHERE s.species = p.species
+                   AND (s.pet_size = 'Any' OR s.pet_size = p.breed_size)
+                   AND s.category IN (
+                       'Basic Groom',
+                       'Premium Groom',
+                       'A La Carte Services (Flat Rate)',
+                       'A La Carte Services (Size-Dependent)'
+                   )
+                   AND s.duration > 0
+                 ORDER BY FIELD(
+                     s.category,
+                     'Basic Groom',
+                     'Premium Groom',
+                     'A La Carte Services (Flat Rate)',
+                     'A La Carte Services (Size-Dependent)'
+                 ), s.service_name, s.service_id"
+            );
+            $statement->bind_param('ii', $selectedPet['pet_id'], $customerId);
+            $statement->execute();
+            $services = $statement->get_result()->fetch_all(MYSQLI_ASSOC);
+            $statement->close();
+        }
     } catch (mysqli_sql_exception $exception) {
         error_log('Pawsome booking service list query failed: ' . $exception->getMessage());
         $serviceLoadError = true;
@@ -177,20 +204,23 @@ if (!$loadError && $selectedPet !== null) {
         }
     }
 
-    if ($selectedServiceId !== null && $selectedService === null) {
+    if (
+        $selectedServiceId !== null
+        && ($selectedService === null || $selectedService['status'] !== 'Available')
+    ) {
         unset($_SESSION['booking_service_id']);
         $selectedServiceId = null;
+        $selectedService = null;
     }
+} else {
+    $petSizeMissing = false;
 }
 
 $serviceCategories = array_fill_keys(customer_booking_service_categories(), []);
-$otherServices = [];
 
 foreach ($services as $service) {
     $category = (string) $service['category'];
-    if (!array_key_exists($category, $serviceCategories)) {
-        $otherServices[] = $service;
-    } else {
+    if (array_key_exists($category, $serviceCategories)) {
         $serviceCategories[$category][] = $service;
     }
 }
@@ -246,8 +276,11 @@ require __DIR__ . '/../includes/customer_header.php';
                             <?php endif; ?>
                             <span class="booking-pet-details">
                                 <strong><?= auth_escape((string) $pet['pet_name']) ?></strong>
-                                <span><?= auth_escape((string) $pet['species']) ?></span>
+                                <span><?= auth_escape($pet['species'] === 'Other' ? 'Other Small Animal' : (string) $pet['species']) ?></span>
                                 <span><?= !empty($pet['breed']) ? auth_escape((string) $pet['breed']) : 'Breed not provided' ?></span>
+                                <?php if (!empty($pet['breed_size'])): ?>
+                                    <span><?= auth_escape((string) $pet['breed_size']) ?> size</span>
+                                <?php endif; ?>
                             </span>
                             <span class="booking-pet-radio" aria-hidden="true"></span>
                         </span>
@@ -272,26 +305,33 @@ require __DIR__ . '/../includes/customer_header.php';
             </div>
             <?php if ($serviceLoadError): ?>
                 <p class="customer-alert" role="alert">We couldn't load available services right now. Please try again later.</p>
+            <?php elseif ($petSizeMissing): ?>
+                <p class="customer-info" role="status">
+                    Add your dog's registered breed size before choosing a service.
+                    <a href="pet-form.php?pet_id=<?= (int) $selectedPet['pet_id'] ?>">Update <?= auth_escape((string) $selectedPet['pet_name']) ?>'s profile</a>.
+                </p>
+            <?php elseif (!in_array($selectedPet['species'], ['Dog', 'Cat', 'Other'], true)): ?>
+                <p class="customer-info" role="status">
+                    Update this pet's species in their profile before booking.
+                    <a href="pet-form.php?pet_id=<?= (int) $selectedPet['pet_id'] ?>">Update pet profile</a>.
+                </p>
             <?php else: ?>
                 <?php if (!$services): ?>
-                    <p class="customer-info" role="note">There are no available grooming services with a valid duration in the database yet. Services will appear here once Pawsome adds them.</p>
+                    <p class="customer-info" role="note">There are no grooming services with a valid duration in the database yet.</p>
                 <?php endif; ?>
-
-                <?php if ($services): ?>
+                <p class="booking-selection-summary" id="booking-selection-summary" role="status">
                     <?php if ($selectedService !== null): ?>
-                        <p class="booking-selection-summary" id="booking-selection-summary" role="status">
-                            Selected: <strong><?= auth_escape((string) $selectedService['service_name']) ?></strong>
-                            · ₱<?= auth_escape(number_format((float) $selectedService['price'], 2)) ?>
-                        </p>
+                        Selected: <strong><?= auth_escape((string) $selectedService['service_name']) ?></strong>
+                        · <?= auth_escape(grooming_format_service_price($selectedService)) ?>
+                        · <?= (int) $selectedService['duration'] ?> min
                     <?php else: ?>
-                        <p class="booking-selection-summary" id="booking-selection-summary" role="status">Select one available service to continue.</p>
+                        Select one available service to continue.
                     <?php endif; ?>
-                    <form method="post" action="booking.php" id="booking-service-form">
-                        <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
-                        <input type="hidden" name="booking_action" value="select_service">
-                        <input type="hidden" name="pet_id" value="<?= (int) $selectedPet['pet_id'] ?>">
-                <?php endif; ?>
-
+                </p>
+                <form method="post" action="booking.php" id="booking-service-form">
+                    <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
+                    <input type="hidden" name="booking_action" value="select_service">
+                    <input type="hidden" name="pet_id" value="<?= (int) $selectedPet['pet_id'] ?>">
                 <?php $categoryIndex = 0; foreach ($serviceCategories as $categoryName => $categoryServices): ?>
                     <?php $panelId = 'booking-category-' . $categoryIndex; ?>
                     <?php $categoryIndex++; ?>
@@ -310,35 +350,54 @@ require __DIR__ . '/../includes/customer_header.php';
                         </h3>
                         <div class="booking-category-panel" id="<?= auth_escape($panelId) ?>" aria-hidden="true" inert>
                             <?php if (!$categoryServices): ?>
-                                <p class="booking-category-empty">No available services are listed in this category yet.</p>
+                                <p class="booking-category-empty">No services are listed in this category for this pet.</p>
                             <?php else: ?>
                                 <div class="booking-service-options">
                                     <?php foreach ($categoryServices as $service): ?>
-                                        <label class="booking-service-option">
+                                        <?php
+                                        $serviceAvailable = $service['status'] === 'Available';
+                                        $servicePrice = grooming_format_service_price($service);
+                                        ?>
+                                        <article
+                                            class="booking-service-option<?= $serviceAvailable ? '' : ' is-unavailable' ?>"
+                                            data-service-available="<?= $serviceAvailable ? 'true' : 'false' ?>"
+                                            <?= (int) $service['service_id'] === $selectedServiceId ? 'aria-current="true"' : '' ?>
+                                        >
                                             <input
                                                 class="booking-service-radio"
                                                 type="radio"
                                                 name="service_id"
                                                 value="<?= (int) $service['service_id'] ?>"
                                                 data-service-name="<?= auth_escape((string) $service['service_name']) ?>"
-                                                data-service-price="₱<?= auth_escape(number_format((float) $service['price'], 2)) ?>"
+                                                data-service-price="<?= auth_escape($servicePrice) ?>"
+                                                data-service-duration="<?= (int) $service['duration'] ?>"
+                                                aria-label="<?= auth_escape((string) $service['service_name'] . ', ' . $servicePrice . ', ' . (int) $service['duration'] . ' minutes') ?>"
                                                 <?= (int) $service['service_id'] === $selectedServiceId ? 'checked' : '' ?>
-                                                required
+                                                <?= $serviceAvailable ? 'required' : 'disabled' ?>
                                             >
-                                            <span class="booking-service-option-content">
+                                            <div class="booking-service-option-content">
                                                 <span class="booking-service-option-heading">
                                                     <strong><?= auth_escape((string) $service['service_name']) ?></strong>
-                                                    <span class="booking-selection-tag">Selected</span>
+                                                    <?php if (!$serviceAvailable): ?>
+                                                        <span class="booking-unavailable-tag">Unavailable</span>
+                                                    <?php endif; ?>
                                                 </span>
-                                                <span class="booking-service-description">
+                                                <p class="booking-service-description" id="booking-description-<?= (int) $service['service_id'] ?>">
                                                     <?= !empty($service['description']) ? auth_escape((string) $service['description']) : 'Description not provided.' ?>
-                                                </span>
+                                                </p>
+                                                <button
+                                                    class="booking-read-more"
+                                                    type="button"
+                                                    aria-expanded="false"
+                                                    aria-controls="booking-description-<?= (int) $service['service_id'] ?>"
+                                                    aria-label="Read More about <?= auth_escape((string) $service['service_name']) ?>"
+                                                >Read More</button>
                                                 <span class="booking-service-meta">
-                                                    <strong>₱<?= auth_escape(number_format((float) $service['price'], 2)) ?></strong>
+                                                    <strong><?= auth_escape($servicePrice) ?></strong>
                                                     <span><?= (int) $service['duration'] ?> min</span>
                                                 </span>
-                                            </span>
-                                        </label>
+                                            </div>
+                                        </article>
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
@@ -346,63 +405,14 @@ require __DIR__ . '/../includes/customer_header.php';
                     </section>
                 <?php endforeach; ?>
 
-                <?php if ($otherServices): ?>
-                    <?php $otherPanelId = 'booking-category-other'; ?>
-                    <section class="booking-service-category">
-                        <h3>
-                            <button
-                                class="booking-category-toggle"
-                                type="button"
-                                aria-expanded="false"
-                                aria-controls="<?= auth_escape($otherPanelId) ?>"
-                            >
-                                <span>Other available services</span>
-                                <span class="booking-category-count"><?= count($otherServices) ?></span>
-                                <span class="booking-category-chevron" aria-hidden="true">⌄</span>
-                            </button>
-                        </h3>
-                        <div class="booking-category-panel" id="<?= auth_escape($otherPanelId) ?>" aria-hidden="true" inert>
-                            <div class="booking-service-options">
-                                <?php foreach ($otherServices as $service): ?>
-                                    <label class="booking-service-option">
-                                        <input
-                                            class="booking-service-radio"
-                                            type="radio"
-                                            name="service_id"
-                                            value="<?= (int) $service['service_id'] ?>"
-                                            data-service-name="<?= auth_escape((string) $service['service_name']) ?>"
-                                            data-service-price="₱<?= auth_escape(number_format((float) $service['price'], 2)) ?>"
-                                            <?= (int) $service['service_id'] === $selectedServiceId ? 'checked' : '' ?>
-                                            required
-                                        >
-                                        <span class="booking-service-option-content">
-                                            <span class="booking-service-option-heading">
-                                                <strong><?= auth_escape((string) $service['service_name']) ?></strong>
-                                                <span class="booking-selection-tag">Selected</span>
-                                            </span>
-                                            <span class="booking-service-description">
-                                                <?= !empty($service['description']) ? auth_escape((string) $service['description']) : 'Description not provided.' ?>
-                                            </span>
-                                            <span class="booking-service-meta">
-                                                <strong>₱<?= auth_escape(number_format((float) $service['price'], 2)) ?></strong>
-                                                <span><?= (int) $service['duration'] ?> min</span>
-                                            </span>
-                                        </span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </section>
-                <?php endif; ?>
-
                 <?php if ($services): ?>
                     <div class="booking-step-actions">
-                        <button class="button button-primary" type="submit">
+                        <button class="button button-primary" id="booking-service-submit" type="submit"<?= $selectedService === null ? ' disabled' : '' ?>>
                             Continue to scheduling <span aria-hidden="true">→</span>
                         </button>
                     </div>
-                    </form>
                 <?php endif; ?>
+                </form>
             <?php endif; ?>
         </section>
     <?php endif; ?>
@@ -442,14 +452,67 @@ require __DIR__ . '/../includes/customer_header.php';
 
         const serviceRadios = Array.from(document.querySelectorAll('.booking-service-radio'));
         const summary = document.getElementById('booking-selection-summary');
+        const submitButton = document.getElementById('booking-service-submit');
 
         serviceRadios.forEach((radio) => {
             radio.addEventListener('change', () => {
                 if (radio.checked && summary) {
-                    summary.textContent = 'Selected: ' + radio.dataset.serviceName + ' · ' + radio.dataset.servicePrice;
+                    summary.textContent = 'Selected: ' + radio.dataset.serviceName
+                        + ' · ' + radio.dataset.servicePrice
+                        + ' · ' + radio.dataset.serviceDuration + ' min';
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                    document.querySelectorAll('.booking-service-option').forEach((card) => {
+                        const selected = card.querySelector('.booking-service-radio').checked;
+                        if (selected) {
+                            card.setAttribute('aria-current', 'true');
+                        } else {
+                            card.removeAttribute('aria-current');
+                        }
+                    });
                 }
             });
         });
+
+        document.querySelectorAll('.booking-service-option[data-service-available="true"]').forEach((card) => {
+            const selectCard = () => {
+                const radio = card.querySelector('.booking-service-radio');
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            };
+
+            card.addEventListener('click', (event) => {
+                if (!event.target.closest('.booking-read-more')) {
+                    selectCard();
+                }
+            });
+        });
+
+        document.querySelectorAll('.booking-read-more').forEach((button) => {
+            button.addEventListener('click', () => {
+                const description = button.parentElement.querySelector('.booking-service-description');
+                const expanded = button.getAttribute('aria-expanded') === 'true';
+                button.setAttribute('aria-expanded', String(!expanded));
+                button.textContent = expanded ? 'Read More' : 'Read Less';
+                button.setAttribute(
+                    'aria-label',
+                    (expanded ? 'Read More about ' : 'Read Less about ')
+                        + button.parentElement.querySelector('.booking-service-option-heading strong').textContent
+                );
+                description.classList.toggle('is-expanded', !expanded);
+
+                const panel = button.closest('.booking-category-panel');
+                if (panel && panel.style.maxHeight !== 'none') {
+                    panel.style.maxHeight = panel.scrollHeight + 'px';
+                }
+            });
+        });
+
+        const selectedRadio = serviceRadios.find((radio) => radio.checked);
+        if (selectedRadio) {
+            selectedRadio.closest('.booking-service-option').setAttribute('aria-current', 'true');
+        }
     })();
 </script>
 <?php require __DIR__ . '/../includes/customer_footer.php'; ?>

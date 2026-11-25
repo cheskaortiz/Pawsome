@@ -65,8 +65,8 @@ if ($isPost) {
 
     if (!auth_csrf_is_valid($_POST['csrf_token'] ?? null)) {
         $error = 'Your session expired. Please reload the form and try again.';
-    } elseif (!in_array($formValues['species'], ['Dog', 'Cat'], true)) {
-        $error = 'Choose Dog or Cat for the pet type.';
+    } elseif (!in_array($formValues['species'], ['Dog', 'Cat', 'Other'], true)) {
+        $error = 'Choose Dog, Cat, or Other Small Animal for the pet type.';
     } elseif ($formValues['pet_name'] === '') {
         $error = 'Enter your pet’s name.';
     } elseif (auth_string_length($formValues['pet_name']) > 100) {
@@ -84,9 +84,11 @@ if ($isPost) {
         $error = 'Enter a weight greater than 0 and no more than 999.99 kg.';
     } elseif (
         $formValues['breed_size'] !== ''
-        && !in_array($formValues['breed_size'], ['Small', 'Medium', 'Large'], true)
+        && !in_array($formValues['breed_size'], ['Small', 'Medium', 'Large', 'Giant'], true)
     ) {
-        $error = 'Choose Small, Medium, or Large for breed size.';
+        $error = 'Choose a valid breed size.';
+    } elseif ($formValues['species'] === 'Dog' && $formValues['breed_size'] === '') {
+        $error = 'Choose your dog’s breed size so we can show the correct grooming services.';
     }
 
     $birthday = null;
@@ -255,6 +257,7 @@ require __DIR__ . '/../includes/customer_header.php';
             <select id="species" name="species" required>
                 <option value="Dog"<?= $formValues['species'] === 'Dog' ? ' selected' : '' ?>>Dog</option>
                 <option value="Cat"<?= $formValues['species'] === 'Cat' ? ' selected' : '' ?>>Cat</option>
+                <option value="Other"<?= $formValues['species'] === 'Other' ? ' selected' : '' ?>>Other Small Animal</option>
             </select>
         </div>
         <div class="pet-form-field">
@@ -297,12 +300,13 @@ require __DIR__ . '/../includes/customer_header.php';
         </div>
         <div class="pet-form-field">
             <label for="breed_size">Breed size</label>
-            <select id="breed_size" name="breed_size">
+            <select id="breed_size" name="breed_size"<?= $formValues['species'] === 'Dog' ? ' required' : '' ?>>
                 <option value="">Choose size</option>
-                <?php foreach (['Small', 'Medium', 'Large'] as $size): ?>
+                <?php foreach (['Small', 'Medium', 'Large', 'Giant'] as $size): ?>
                     <option value="<?= auth_escape($size) ?>"<?= $formValues['breed_size'] === $size ? ' selected' : '' ?>><?= auth_escape($size) ?></option>
                 <?php endforeach; ?>
             </select>
+            <small id="breed-size-help">Required for dogs; other pets use their listed service rate.</small>
         </div>
     </div>
 
@@ -359,7 +363,13 @@ require __DIR__ . '/../includes/customer_header.php';
         const photoPreview = document.querySelector('#photo-preview');
         const photoPreviewEmpty = document.querySelector('#photo-preview-empty');
         const photoMessage = document.querySelector('#photo-upload-message');
+        const species = document.querySelector('#species');
+        const breedSize = document.querySelector('#breed_size');
         let previewUrl = null;
+
+        const updateBreedSizeRequirement = () => {
+            breedSize.required = species.value === 'Dog';
+        };
 
         const updateAge = () => {
             if (!birthday.value) {
@@ -390,6 +400,8 @@ require __DIR__ . '/../includes/customer_header.php';
 
         birthday.addEventListener('input', updateAge);
         updateAge();
+        species.addEventListener('change', updateBreedSizeRequirement);
+        updateBreedSizeRequirement();
 
         photoInput.addEventListener('change', () => {
             photoMessage.textContent = '';

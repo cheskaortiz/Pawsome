@@ -1,4 +1,3 @@
-
 # Dependencies
 node_modules/
 
@@ -10,6 +9,7 @@ node_modules/
 *.sql
 !database/add_pet_profile_fields.sql
 !database/add_grooming_service_catalog.sql
+!database/implement_grooming_service_selection.sql
 
 # Uploaded pet photos and vaccination documents
 uploads/pets/*

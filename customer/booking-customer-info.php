@@ -123,7 +123,7 @@ require __DIR__ . '/../includes/customer_header.php';
         <?php endif; ?>
         <div>
             <h3><?= auth_escape((string) $selection['pet_name']) ?></h3>
-            <p><?= auth_escape((string) $selection['species']) ?><?= !empty($selection['breed']) ? ' · ' . auth_escape((string) $selection['breed']) : '' ?></p>
+            <p><?= auth_escape($selection['species'] === 'Other' ? 'Other Small Animal' : (string) $selection['species']) ?><?= !empty($selection['breed']) ? ' · ' . auth_escape((string) $selection['breed']) : '' ?></p>
         </div>
     </article>
 </section>

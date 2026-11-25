@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $transactionStarted = true;
 
                 $petStatement = $conn->prepare(
-                    'SELECT pet_id, species
+                    'SELECT pet_id, species, breed_size
                      FROM pets
                      WHERE pet_id = ? AND user_id = ?
                      FOR UPDATE'
@@ -131,20 +131,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $petStatement->close();
 
                 $petSpecies = (string) ($petExists['species'] ?? '');
-                $serviceStatement = $conn->prepare(
-                    "SELECT service_id, species, duration
-                     FROM services
-                     WHERE service_id = ?
-                       AND species = ?
-                       AND status = 'Available'
-                       AND duration > 0
-                     FOR UPDATE"
-                );
-                $serviceId = (int) $selection['service_id'];
-                $serviceStatement->bind_param('is', $serviceId, $petSpecies);
-                $serviceStatement->execute();
-                $currentService = $serviceStatement->get_result()->fetch_assoc();
-                $serviceStatement->close();
+                $petSize = (string) ($petExists['breed_size'] ?? '');
+                $currentService = null;
+                if (
+                    $petExists
+                    && ($petSpecies !== 'Dog' || in_array($petSize, ['Small', 'Medium', 'Large', 'Giant'], true))
+                ) {
+                    $serviceStatement = $conn->prepare(
+                        "SELECT service_id, species, pet_size, price, duration
+                         FROM services
+                         WHERE service_id = ?
+                           AND species = ?
+                           AND (pet_size = 'Any' OR pet_size = ?)
+                           AND category IN (
+                               'Basic Groom',
+                               'Premium Groom',
+                               'A La Carte Services (Flat Rate)',
+                               'A La Carte Services (Size-Dependent)'
+                           )
+                           AND status = 'Available'
+                           AND duration > 0
+                         FOR UPDATE"
+                    );
+                    $serviceId = (int) $selection['service_id'];
+                    $serviceStatement->bind_param('iss', $serviceId, $petSpecies, $petSize);
+                    $serviceStatement->execute();
+                    $currentService = $serviceStatement->get_result()->fetch_assoc();
+                    $serviceStatement->close();
+                }
 
                 if (!$petExists || !$currentService) {
                     $conn->rollback();
@@ -307,7 +321,7 @@ require __DIR__ . '/../includes/customer_header.php';
             <?php endif; ?>
             <div>
                 <h3><?= auth_escape((string) $selection['pet_name']) ?></h3>
-                <p><?= auth_escape((string) $selection['species']) ?><?= !empty($selection['breed']) ? ' · ' . auth_escape((string) $selection['breed']) : '' ?></p>
+                <p><?= auth_escape($selection['species'] === 'Other' ? 'Other Small Animal' : (string) $selection['species']) ?><?= !empty($selection['breed']) ? ' · ' . auth_escape((string) $selection['breed']) : '' ?></p>
             </div>
         </div>
     </section>
@@ -320,7 +334,7 @@ require __DIR__ . '/../includes/customer_header.php';
             <div><dt>Appointment date</dt><dd><?= auth_escape($formattedBookingDate) ?></dd></div>
             <div><dt>Appointment time</dt><dd><?= auth_escape($formattedBookingTime) ?></dd></div>
             <div><dt>Service duration</dt><dd><?= (int) $selection['duration'] ?> minutes</dd></div>
-            <div><dt>Service price</dt><dd>₱<?= auth_escape(number_format((float) $selection['price'], 2)) ?></dd></div>
+            <div><dt>Service price</dt><dd><?= auth_escape(grooming_format_service_price($selection)) ?></dd></div>
             <div><dt>Booking notes</dt><dd><?= $bookingNotes !== '' ? nl2br(auth_escape($bookingNotes)) : 'None' ?></dd></div>
         </dl>
         <p class="customer-muted customer-price-note">This request will be saved as Pending until Pawsome confirms it.</p>

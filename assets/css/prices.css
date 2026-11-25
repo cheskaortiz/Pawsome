@@ -57,7 +57,7 @@
 }
 
 .prices-table-wrap {
-    overflow: hidden;
+    overflow-x: auto;
     border: 1px solid var(--line);
     border-radius: 17px;
     background: #fff;
@@ -66,8 +66,21 @@
 
 .prices-table {
     width: 100%;
+    min-width: 430px;
     border-collapse: collapse;
     text-align: left;
+}
+
+.prices-category-table + .prices-category-table {
+    margin-top: 20px;
+}
+
+.prices-category-table h3 {
+    margin: 0 0 10px;
+    color: var(--ink);
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 800;
 }
 
 .prices-table th,
@@ -97,10 +110,22 @@
     background: var(--yellow-soft);
 }
 
+.prices-table th:nth-child(2),
+.prices-table td:nth-child(2),
 .prices-table th:last-child,
 .prices-table td:last-child {
-    width: 30%;
     text-align: right;
+}
+
+.prices-table th:first-child,
+.prices-table td:first-child {
+    width: 58%;
+}
+
+.prices-table th:nth-child(2),
+.prices-table td:nth-child(2) {
+    width: 20%;
+    white-space: nowrap;
 }
 
 .prices-table td:last-child {
