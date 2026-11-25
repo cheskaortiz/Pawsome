@@ -9,6 +9,7 @@ node_modules/
 # Database backups
 *.sql
 !database/add_pet_profile_fields.sql
+!database/add_grooming_service_catalog.sql
 
 # Uploaded pet photos and vaccination documents
 uploads/pets/*
