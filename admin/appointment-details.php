@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/appointment_price.php';
 
 $activeAdminPage = 'appointments';
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
@@ -142,7 +143,8 @@ try {
                 p.pet_id, p.pet_name, p.species, p.breed, p.gender, p.age, p.birthday,
                 p.notes AS pet_notes, p.photo_path, p.vaccination_proof_path,
                 p.color_markings, p.weight_kg, p.breed_size,
-                s.service_name, s.duration
+                s.service_name, s.duration, s.price AS current_service_price,
+                a.service_price_at_booking, a.service_price_snapshot_saved
          FROM appointments AS a
          INNER JOIN users AS u ON u.user_id = a.user_id
          INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
@@ -184,6 +186,7 @@ $statusClasses = [
 ];
 $statusClass = $statusClasses[$status] ?? 'unknown';
 $statusLabel = isset($statusClasses[$status]) ? $status : 'Unknown';
+$priceDisplay = appointment_price_display($appointment);
 $hasGroomingRecord = (int) $appointment['has_grooming_record'] === 1;
 $availableActions = [];
 foreach ($actionTransitions as $action => $transition) {
@@ -317,6 +320,13 @@ $csrfToken = auth_csrf_token();
                         <dl class="admin-appointment-detail-list">
                             <div><dt>Appointment ID</dt><dd>#<?= (int) $appointmentId ?></dd></div>
                             <div><dt>Service</dt><dd><?= auth_escape((string) $appointment['service_name']) ?></dd></div>
+                            <div>
+                                <dt>Service price</dt>
+                                <dd>
+                                    <?= auth_escape($priceDisplay['formatted']) ?>
+                                    <span class="admin-table-muted"><?= auth_escape($priceDisplay['source']) ?></span>
+                                </dd>
+                            </div>
                             <div><dt>Date</dt><dd><?= auth_escape($appointmentDateTime->format('M j, Y')) ?></dd></div>
                             <div><dt>Time</dt><dd><?= auth_escape($appointmentDateTime->format('g:i A')) ?></dd></div>
                             <div><dt>Status</dt><dd><?= auth_escape($statusLabel) ?></dd></div>

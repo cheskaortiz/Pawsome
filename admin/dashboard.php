@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/appointment_price.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'dashboard';
@@ -59,7 +60,9 @@ try {
 try {
     $statement = $conn->prepare(
         'SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
-                u.first_name, u.last_name, p.pet_name, s.service_name
+                u.first_name, u.last_name, p.pet_name, s.service_name,
+                s.price AS current_service_price,
+                a.service_price_at_booking, a.service_price_snapshot_saved
          FROM appointments AS a
          INNER JOIN users AS u ON u.user_id = a.user_id
          INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
@@ -174,6 +177,7 @@ $statusTotal = array_sum($statusCounts);
                                             <th scope="col">Customer</th>
                                             <th scope="col">Pet</th>
                                             <th scope="col">Service</th>
+                                            <th scope="col">Price</th>
                                             <th scope="col">Status</th>
                                         </tr>
                                     </thead>
@@ -183,6 +187,7 @@ $statusTotal = array_sum($statusCounts);
                                             $status = is_string($appointment['status']) ? $appointment['status'] : 'Unknown';
                                             $statusClass = $statusClasses[$status] ?? 'unknown';
                                             $statusLabel = isset($statusClasses[$status]) ? $status : 'Unknown';
+                                            $priceDisplay = appointment_price_display($appointment);
                                             $appointmentDateTime = new DateTimeImmutable(
                                                 (string) $appointment['appointment_date'] . ' ' . (string) $appointment['appointment_time'],
                                                 new DateTimeZone('Asia/Manila')
@@ -197,6 +202,10 @@ $statusTotal = array_sum($statusCounts);
                                                 <td><?= auth_escape(trim((string) $appointment['first_name'] . ' ' . (string) $appointment['last_name'])) ?></td>
                                                 <td><?= auth_escape((string) $appointment['pet_name']) ?></td>
                                                 <td><?= auth_escape((string) $appointment['service_name']) ?></td>
+                                                <td>
+                                                    <?= auth_escape($priceDisplay['formatted']) ?>
+                                                    <span class="admin-table-muted"><?= auth_escape($priceDisplay['source']) ?></span>
+                                                </td>
                                                 <td>
                                                     <span class="customer-status customer-status--<?= auth_escape($statusClass) ?>">
                                                         <?= auth_escape($statusLabel) ?>

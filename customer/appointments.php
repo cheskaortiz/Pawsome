@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/grooming_price_data.php';
+require_once __DIR__ . '/../includes/appointment_price.php';
 
 $pageTitle = 'Appointments';
 $activeCustomerPage = 'appointments';
@@ -60,7 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $statement = $conn->prepare(
         "SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
-            p.pet_name, s.service_name, s.price AS total_price, s.price_note,
+            p.pet_name, s.service_name, s.price AS current_service_price,
+            a.service_price_at_booking, a.service_price_snapshot_saved,
                 CASE
                     WHEN a.status IN ('Pending', 'Confirmed')
                      AND NOT EXISTS (
@@ -138,6 +139,7 @@ require __DIR__ . '/../includes/customer_header.php';
                     ];
                     $statusLabel = isset($statusClasses[$status]) ? $status : 'Status unavailable';
                     $statusClass = $statusClasses[$status] ?? 'unknown';
+                    $priceDisplay = appointment_price_display($appointment);
                     ?>
                     <tr>
                         <td>#<?= (int) $appointment['appointment_id'] ?></td>
@@ -147,10 +149,10 @@ require __DIR__ . '/../includes/customer_header.php';
                         </td>
                         <td><?= auth_escape((string) $appointment['pet_name']) ?></td>
                         <td><?= auth_escape((string) $appointment['service_name']) ?></td>
-                        <td><?= auth_escape(grooming_format_service_price([
-                            'price' => $appointment['total_price'],
-                            'price_note' => $appointment['price_note'],
-                        ])) ?></td>
+                        <td>
+                            <?= auth_escape($priceDisplay['formatted']) ?>
+                            <span class="customer-muted"><?= auth_escape($priceDisplay['source']) ?></span>
+                        </td>
                         <td><span class="customer-status customer-status--<?= auth_escape($statusClass) ?>"><?= auth_escape($statusLabel) ?></span></td>
                         <td>
                             <?php if ((int) $appointment['can_cancel'] === 1): ?>
@@ -166,6 +168,6 @@ require __DIR__ . '/../includes/customer_header.php';
             </tbody>
         </table>
     </div>
-    <p class="customer-muted customer-price-note">The amount shown is the service's current price; a separate appointment-specific total is not stored.</p>
+    <p class="customer-muted customer-price-note">New appointments show the price saved when booking. For older appointments without a saved price, the current service price is shown as a fallback and may not match the original amount.</p>
 <?php endif; ?>
 <?php require __DIR__ . '/../includes/customer_footer.php'; ?>

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/appointment_price.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'appointments';
@@ -201,7 +202,8 @@ try {
                 ) AS has_grooming_record,
                 u.first_name, u.last_name, u.email, u.phone,
                 p.pet_name, p.species, p.breed, p.breed_size,
-                s.service_name, s.duration
+                s.service_name, s.duration, s.price AS current_service_price,
+                a.service_price_at_booking, a.service_price_snapshot_saved
          FROM appointments AS a
          INNER JOIN users AS u ON u.user_id = a.user_id
          INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
@@ -433,6 +435,7 @@ if ($isAppointmentFragment) {
                                 <div><dt>Time</dt><dd data-appointment-detail="time"></dd></div>
                                 <div><dt>Status</dt><dd data-appointment-detail="status"></dd></div>
                                 <div><dt>Service</dt><dd data-appointment-detail="service"></dd></div>
+                                <div><dt>Service price</dt><dd data-appointment-detail="price"></dd></div>
                                 <div><dt>Duration</dt><dd data-appointment-detail="duration"></dd></div>
                             </dl>
                         </section>

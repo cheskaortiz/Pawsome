@@ -189,15 +189,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         $insert = $conn->prepare(
                             "INSERT INTO appointments
-                                (user_id, pet_id, service_id, appointment_date, appointment_time, status, notes)
-                             VALUES (?, ?, ?, ?, ?, 'Pending', ?)"
+                                (user_id, pet_id, service_id, service_price_at_booking,
+                                 service_price_snapshot_saved, appointment_date, appointment_time, status, notes)
+                             VALUES (?, ?, ?, ?, 1, ?, ?, 'Pending', ?)"
                         );
+                        $servicePriceAtBooking = $currentService['price'];
                         $appointmentTime = $bookingTime;
                         $insert->bind_param(
-                            'iiisss',
+                            'iiissss',
                             $customerId,
                             $petId,
                             $serviceId,
+                            $servicePriceAtBooking,
                             $bookingDate,
                             $appointmentTime,
                             $bookingNotes

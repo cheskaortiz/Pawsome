@@ -45,11 +45,14 @@
             <span class="customer-nav-indicator" aria-hidden="true"></span>
             Pets
         </a>
-        <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true" title="Coming soon">
+        <a
+            class="customer-nav-link<?= $activeAdminPage === 'services' ? ' is-active' : '' ?>"
+            href="services.php"
+            <?= $activeAdminPage === 'services' ? 'aria-current="page"' : '' ?>
+        >
             <span class="customer-nav-indicator" aria-hidden="true"></span>
             Services &amp; Prices
-            <span class="admin-nav-coming-soon">Soon</span>
-        </span>
+        </a>
         <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true" title="Coming soon">
             <span class="customer-nav-indicator" aria-hidden="true"></span>
             Grooming Records

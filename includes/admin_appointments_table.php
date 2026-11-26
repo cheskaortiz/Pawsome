@@ -22,6 +22,7 @@
                         <th scope="col">Contact</th>
                         <th scope="col">Pet</th>
                         <th scope="col">Service</th>
+                        <th scope="col">Price</th>
                         <th scope="col">Status</th>
                         <th scope="col">Manage</th>
                         <th scope="col">Actions</th>
@@ -52,6 +53,7 @@
                             }
                         }
                         $hasGroomingRecord = (int) $appointment['has_grooming_record'] === 1;
+                        $priceDisplay = appointment_price_display($appointment);
                         if ($hasGroomingRecord) {
                             $availableActions = array_values(array_filter(
                                 $availableActions,
@@ -84,6 +86,10 @@
                                 <span class="admin-table-muted"><?= (int) $appointment['duration'] ?> min</span>
                             </td>
                             <td>
+                                <?= auth_escape($priceDisplay['formatted']) ?>
+                                <span class="admin-table-muted"><?= auth_escape($priceDisplay['source']) ?></span>
+                            </td>
+                            <td>
                                 <span class="customer-status customer-status--<?= auth_escape($statusClass) ?>">
                                     <?= auth_escape($statusLabel) ?>
                                 </span>
@@ -112,6 +118,7 @@
                                     data-pet-name="<?= auth_escape((string) $appointment['pet_name']) ?>"
                                     data-pet="<?= auth_escape(implode(' · ', $petDescription)) ?>"
                                     data-service="<?= auth_escape((string) $appointment['service_name']) ?>"
+                                    data-price="<?= auth_escape($priceDisplay['formatted'] . ' · ' . $priceDisplay['source']) ?>"
                                     data-duration="<?= (int) $appointment['duration'] ?> minutes"
                                     data-status="<?= auth_escape($statusLabel) ?>"
                                     data-grooming-record="<?= $hasGroomingRecord ? 'Linked' : 'Not linked' ?>"

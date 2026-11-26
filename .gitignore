@@ -12,6 +12,7 @@ node_modules/
 !database/implement_grooming_service_selection.sql
 !database/appointment_management_workflow.sql
 !database/add_appointment_pickup_schedule.sql
+!database/add_appointment_price_snapshot.sql
 
 # Uploaded pet photos and vaccination documents
 uploads/pets/*
