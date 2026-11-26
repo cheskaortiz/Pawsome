@@ -1,0 +1,178 @@
+.admin-customer-detail-main {
+    gap: 20px;
+}
+
+.admin-customer-back {
+    color: #315d78;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.admin-customer-back:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.admin-customer-detail-heading {
+    margin: 0;
+}
+
+.admin-customer-detail-card {
+    overflow: hidden;
+}
+
+.admin-customer-detail-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+}
+
+.admin-customer-detail-list div {
+    min-width: 0;
+    padding: 15px 21px;
+    border-right: 1px solid #f0eee7;
+    border-bottom: 1px solid #f0eee7;
+}
+
+.admin-customer-detail-list div:last-child {
+    border-right: 0;
+}
+
+.admin-customer-detail-list dt,
+.admin-customer-pet-list dt {
+    margin-bottom: 4px;
+    color: #7b868c;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.admin-customer-detail-list dd,
+.admin-customer-pet-list dd {
+    margin: 0;
+    color: #4e595f;
+    font-size: 13px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.admin-customer-pet-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 20px;
+}
+
+.admin-customer-pet-card {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: 150px minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid #edf0ed;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.admin-customer-pet-photo {
+    width: 150px;
+    height: 100%;
+    min-height: 210px;
+    object-fit: cover;
+    background: #f6f3e9;
+}
+
+.admin-customer-pet-placeholder {
+    display: grid;
+    place-items: center;
+    color: #91a8b7;
+    font-size: 34px;
+}
+
+.admin-customer-pet-content {
+    min-width: 0;
+    padding: 15px;
+}
+
+.admin-customer-pet-kicker {
+    color: #6d889b;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.admin-customer-pet-content h3 {
+    margin: 3px 0 11px;
+    font-family: var(--font-heading);
+    font-size: 18px;
+}
+
+.admin-customer-pet-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    margin: 0;
+}
+
+.admin-customer-pet-list div {
+    min-width: 0;
+}
+
+.admin-customer-pet-list dd {
+    font-size: 12px;
+}
+
+.admin-customer-pet-note {
+    margin: 12px 0 0;
+    color: #707a80;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.admin-customer-proof-link {
+    display: inline-block;
+    margin-top: 12px;
+    color: #315d78;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.admin-customer-empty {
+    margin: 0;
+    padding: 24px 21px;
+    color: #737a80;
+    font-size: 13px;
+}
+
+.admin-customer-appointments-table {
+    min-width: 780px;
+}
+
+@media (max-width: 1050px) {
+    .admin-customer-pet-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-customer-detail-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-customer-detail-list div {
+        border-right: 0;
+    }
+
+    .admin-customer-pet-card {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-customer-pet-photo {
+        width: 100%;
+        height: 180px;
+        min-height: 180px;
+    }
+}
