@@ -77,11 +77,14 @@
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
             Reviews
         </a>
-        <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true">
+        <a
+            class="customer-nav-link<?= $activeAdminPage === 'reports' ? ' is-active' : '' ?>"
+            href="reports.php"
+            <?= $activeAdminPage === 'reports' ? 'aria-current="page"' : '' ?>
+        >
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5m0 14h17M8 16v-5m5 5V7m5 9V3"/></svg>
             Reports
-            <span class="admin-nav-coming-soon">Coming Soon</span>
-        </span>
+        </a>
     </nav>
 
     <nav class="customer-sidebar-bottom admin-sidebar-bottom" aria-label="Admin account navigation">
