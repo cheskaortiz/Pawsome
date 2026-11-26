@@ -1,0 +1,207 @@
+.admin-grooming-record-detail-main {
+    gap: 20px;
+}
+
+.admin-grooming-back {
+    width: fit-content;
+    color: #315d78;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.admin-grooming-back:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.admin-grooming-detail-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0;
+}
+
+.admin-grooming-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+}
+
+.admin-grooming-detail-card {
+    min-width: 0;
+}
+
+.admin-grooming-detail-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 8px 19px 13px;
+}
+
+.admin-grooming-detail-list > div {
+    display: grid;
+    grid-template-columns: minmax(105px, .75fr) minmax(0, 1.25fr);
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid #f0eee7;
+}
+
+.admin-grooming-detail-list > div:last-child {
+    border-bottom: 0;
+}
+
+.admin-grooming-detail-list dt {
+    color: #77828a;
+    font-size: 11px;
+}
+
+.admin-grooming-detail-list dd {
+    min-width: 0;
+    margin: 0;
+    color: #46535a;
+    font-size: 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.admin-grooming-detail-list dd a,
+.admin-grooming-secondary-link {
+    color: #315d78;
+    font-weight: 800;
+}
+
+.admin-grooming-detail-list dd .admin-table-muted {
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.admin-grooming-secondary-link {
+    align-self: center;
+    font-size: 11px;
+}
+
+.admin-grooming-pet-content {
+    display: grid;
+    grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+    padding: 20px;
+}
+
+.admin-grooming-pet-photo {
+    display: block;
+    width: 100%;
+    max-height: 250px;
+    aspect-ratio: 1;
+    border: 1px solid #e8eeee;
+    border-radius: 15px;
+    background: #f7fafb;
+    object-fit: cover;
+}
+
+.admin-grooming-pet-placeholder {
+    display: grid;
+    place-items: center;
+    color: #8ca6b4;
+    font-size: 52px;
+}
+
+.admin-grooming-pet-info {
+    min-width: 0;
+}
+
+.admin-grooming-pet-info h3 {
+    margin: 0 0 11px;
+    color: #39464d;
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.admin-grooming-pet-info .admin-grooming-detail-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 13px;
+    padding: 0;
+}
+
+.admin-grooming-pet-info .admin-grooming-detail-list > div {
+    display: block;
+    padding: 9px 10px;
+    border: 1px solid #f0eee7;
+    border-radius: 10px;
+}
+
+.admin-grooming-pet-notes {
+    margin-top: 13px;
+    padding: 12px;
+    border-radius: 10px;
+    color: #5f696f;
+    background: #fffdf7;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.admin-grooming-pet-notes strong {
+    color: #39464d;
+}
+
+.admin-grooming-pet-notes p {
+    margin: 5px 0 0;
+}
+
+.admin-grooming-notes-content {
+    margin: 20px;
+    padding: 16px;
+    border: 1px solid #f0eee7;
+    border-radius: 12px;
+    color: #5f696f;
+    background: #fffdf7;
+    font-size: 13px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.admin-grooming-empty {
+    margin: 0;
+    padding: 22px 20px;
+    color: #737a80;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.admin-grooming-unsupported-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 15px;
+}
+
+@media (max-width: 1000px) {
+    .admin-grooming-detail-grid,
+    .admin-grooming-unsupported-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-grooming-detail-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-grooming-pet-content {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-grooming-pet-photo {
+        width: 100%;
+        max-height: 230px;
+    }
+
+    .admin-grooming-pet-info .admin-grooming-detail-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

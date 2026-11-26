@@ -53,11 +53,14 @@
             <span class="customer-nav-indicator" aria-hidden="true"></span>
             Services &amp; Prices
         </a>
-        <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true" title="Coming soon">
+        <a
+            class="customer-nav-link<?= $activeAdminPage === 'grooming-records' ? ' is-active' : '' ?>"
+            href="grooming-records.php"
+            <?= $activeAdminPage === 'grooming-records' ? 'aria-current="page"' : '' ?>
+        >
             <span class="customer-nav-indicator" aria-hidden="true"></span>
             Grooming Records
-            <span class="admin-nav-coming-soon">Soon</span>
-        </span>
+        </a>
     </nav>
 
     <div class="customer-sidebar-bottom">
