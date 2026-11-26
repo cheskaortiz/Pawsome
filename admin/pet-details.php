@@ -51,7 +51,11 @@ if (!$pet) {
 try {
     $statement = $conn->prepare(
         'SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
-                s.service_name
+                CASE
+                    WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
+                    THEN CONCAT_WS(\' - \', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name
          FROM appointments AS a
          INNER JOIN services AS s ON s.service_id = a.service_id
          WHERE a.pet_id = ? AND a.user_id = ?
@@ -246,7 +250,7 @@ $hasVaccinationProof = trim((string) ($pet['vaccination_proof_path'] ?? '')) !==
                                         ?>
                                         <tr>
                                             <td class="admin-reference">#<?= (int) $appointment['appointment_id'] ?></td>
-                                            <td><strong><?= auth_escape((string) $appointment['service_name']) ?></strong></td>
+                                            <td><strong><?= auth_escape((string) $appointment['service_display_name']) ?></strong></td>
                                             <td><?= auth_escape(date('M j, Y', strtotime((string) $appointment['appointment_date']))) ?></td>
                                             <td><?= auth_escape(date('g:i A', strtotime((string) $appointment['appointment_time']))) ?></td>
                                             <td><span class="customer-status customer-status--<?= auth_escape($statusClass) ?>"><?= auth_escape($status) ?></span></td>

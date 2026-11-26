@@ -33,7 +33,12 @@ try {
 try {
     $statement = $conn->prepare(
         "SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
-                p.pet_id, p.pet_name, s.service_name
+                p.pet_id, p.pet_name,
+                CASE
+                    WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                    THEN CONCAT_WS(' - ', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name
          FROM appointments AS a
          INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
          INNER JOIN services AS s ON s.service_id = a.service_id
@@ -124,7 +129,7 @@ require __DIR__ . '/../includes/customer_header.php';
                 <article class="customer-upcoming-card">
                     <div>
                         <span class="customer-card-kicker">#<?= (int) $appointment['appointment_id'] ?> · <?= auth_escape((string) $appointment['status']) ?></span>
-                        <h3><?= auth_escape((string) $appointment['pet_name']) ?> <span>·</span> <?= auth_escape((string) $appointment['service_name']) ?></h3>
+                        <h3><?= auth_escape((string) $appointment['pet_name']) ?> <span>·</span> <?= auth_escape((string) $appointment['service_display_name']) ?></h3>
                     </div>
                     <p>
                         <?= auth_escape(date('M j, Y', strtotime((string) $appointment['appointment_date']))) ?>

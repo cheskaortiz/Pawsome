@@ -192,7 +192,12 @@ try {
     $sql =
         'SELECT gr.record_id, gr.appointment_id, gr.pet_id, gr.grooming_date,
                 gr.grooming_notes, p.pet_name, p.species,
-                u.first_name, u.last_name, s.service_name
+                u.first_name, u.last_name,
+                CASE
+                    WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
+                    THEN CONCAT_WS(\' - \', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name
          FROM grooming_records AS gr
          INNER JOIN appointments AS a ON a.appointment_id = gr.appointment_id
          INNER JOIN pets AS p ON p.pet_id = gr.pet_id AND p.user_id = a.user_id
@@ -204,10 +209,11 @@ try {
     if ($searchTerm !== '') {
         $sql .= " AND (p.pet_name LIKE ?
                       OR CONCAT_WS(' ', u.first_name, u.last_name) LIKE ?
-                      OR s.service_name LIKE ?)";
+                      OR s.service_name LIKE ?
+                      OR s.category LIKE ?)";
         $pattern = '%' . $searchTerm . '%';
-        array_push($parameters, $pattern, $pattern, $pattern);
-        $parameterTypes .= 'sss';
+        array_push($parameters, $pattern, $pattern, $pattern, $pattern);
+        $parameterTypes .= 'ssss';
     }
     if ($fromDate !== '') {
         $sql .= ' AND gr.grooming_date >= ?';
@@ -236,7 +242,12 @@ try {
 
     $statement = $conn->prepare(
         "SELECT a.appointment_id, a.appointment_date, a.appointment_time,
-                p.pet_name, p.species, u.first_name, u.last_name, s.service_name
+                p.pet_name, p.species, u.first_name, u.last_name,
+                CASE
+                    WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                    THEN CONCAT_WS(' - ', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name
          FROM appointments AS a
          INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
          INNER JOIN users AS u ON u.user_id = a.user_id AND u.role = 'customer'
@@ -403,7 +414,7 @@ $csrfToken = auth_csrf_token();
                                             <td class="admin-reference">#<?= (int) $record['appointment_id'] ?></td>
                                             <td><strong><?= auth_escape((string) $record['pet_name']) ?></strong></td>
                                             <td><?= auth_escape(trim((string) $record['first_name'] . ' ' . (string) $record['last_name'])) ?></td>
-                                            <td><?= auth_escape((string) $record['service_name']) ?></td>
+                                            <td><?= auth_escape((string) $record['service_display_name']) ?></td>
                                             <td><?= auth_escape(date('M j, Y', strtotime((string) $record['grooming_date']))) ?></td>
                                             <td><a class="admin-grooming-view-button" href="grooming-record-details.php?id=<?= (int) $record['record_id'] ?>">View Record</a></td>
                                         </tr>
@@ -453,7 +464,7 @@ $csrfToken = auth_csrf_token();
                         ?>
                         <option value="<?= (int) $appointment['appointment_id'] ?>">
                             #<?= (int) $appointment['appointment_id'] ?> · <?= auth_escape((string) $appointment['pet_name']) ?>
-                            · <?= auth_escape($ownerName) ?> · <?= auth_escape((string) $appointment['service_name']) ?>
+                            · <?= auth_escape($ownerName) ?> · <?= auth_escape((string) $appointment['service_display_name']) ?>
                             · <?= auth_escape($dateTime->format('M j, Y g:i A')) ?>
                         </option>
                     <?php endforeach; ?>
@@ -528,7 +539,7 @@ $csrfToken = auth_csrf_token();
                     <td class="admin-reference">#${Number(record.appointment_id)}</td>
                     <td><strong>${escapeHtml(record.pet_name)}</strong></td>
                     <td>${escapeHtml(customerName)}</td>
-                    <td>${escapeHtml(record.service_name)}</td>
+                    <td>${escapeHtml(record.service_display_name)}</td>
                     <td>${escapeHtml(formatDate(record.grooming_date))}</td>
                     <td><a class="admin-grooming-view-button" href="grooming-record-details.php?id=${Number(record.record_id)}">View Record</a></td>
                 </tr>`;
@@ -573,7 +584,7 @@ $csrfToken = auth_csrf_token();
                 (payload.eligible_appointments || []).forEach((appointment) => {
                     const option = document.createElement('option');
                     option.value = String(appointment.appointment_id);
-                    option.textContent = `#${appointment.appointment_id} · ${appointment.pet_name} · ${appointment.first_name} ${appointment.last_name} · ${appointment.service_name} · ${formatDateTime(appointment.appointment_date, appointment.appointment_time)}`;
+                    option.textContent = `#${appointment.appointment_id} · ${appointment.pet_name} · ${appointment.first_name} ${appointment.last_name} · ${appointment.service_display_name} · ${formatDateTime(appointment.appointment_date, appointment.appointment_time)}`;
                     eligibleSelect.append(option);
                 });
                 if ((payload.eligible_appointments || []).some((appointment) => String(appointment.appointment_id) === selectedAppointment)) {

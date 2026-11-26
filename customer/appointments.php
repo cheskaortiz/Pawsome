@@ -101,7 +101,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $statement = $conn->prepare(
         "SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
-            p.pet_name, s.service_name, s.price AS current_service_price,
+            p.pet_name,
+            CASE
+                WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                THEN CONCAT_WS(' - ', s.category, s.service_name)
+                ELSE s.service_name
+            END AS service_display_name,
+            s.price AS current_service_price,
             a.service_price_at_booking, a.service_price_snapshot_saved,
                 r.review_id,
                 CASE
@@ -191,7 +197,7 @@ require __DIR__ . '/../includes/customer_header.php';
                             <span class="customer-muted"><?= auth_escape(date('g:i A', strtotime((string) $appointment['appointment_time']))) ?></span>
                         </td>
                         <td><?= auth_escape((string) $appointment['pet_name']) ?></td>
-                        <td><?= auth_escape((string) $appointment['service_name']) ?></td>
+                        <td><?= auth_escape((string) $appointment['service_display_name']) ?></td>
                         <td>
                             <?= auth_escape($priceDisplay['formatted']) ?>
                             <span class="customer-muted"><?= auth_escape($priceDisplay['source']) ?></span>

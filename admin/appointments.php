@@ -259,6 +259,11 @@ try {
                 ) AS has_grooming_record,
                 u.first_name, u.last_name, u.email, u.phone,
                 p.pet_name, p.species, p.breed, p.breed_size,
+                CASE
+                    WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
+                    THEN CONCAT_WS(\' - \', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name,
                 s.service_name, s.duration, s.price AS current_service_price,
                 a.service_price_at_booking, a.service_price_snapshot_saved
          FROM appointments AS a
@@ -273,10 +278,11 @@ try {
         $conditions[] = "(CAST(a.appointment_id AS CHAR) LIKE ?
             OR CONCAT_WS(' ', u.first_name, u.last_name) LIKE ?
             OR p.pet_name LIKE ?
-            OR s.service_name LIKE ?)";
+            OR s.service_name LIKE ?
+            OR s.category LIKE ?)";
         $searchPattern = '%' . $searchTerm . '%';
-        array_push($parameters, $searchPattern, $searchPattern, $searchPattern, $searchPattern);
-        $parameterTypes .= 'ssss';
+        array_push($parameters, $searchPattern, $searchPattern, $searchPattern, $searchPattern, $searchPattern);
+        $parameterTypes .= 'sssss';
     }
     if ($fromDate !== '') {
         $conditions[] = 'a.appointment_date >= ?';

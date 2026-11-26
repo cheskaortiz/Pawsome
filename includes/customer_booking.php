@@ -24,6 +24,17 @@ function customer_booking_service_categories(): array
     ];
 }
 
+function customer_booking_service_label(array $service): string
+{
+    $category = trim((string) ($service['category'] ?? ''));
+    $serviceName = trim((string) ($service['service_name'] ?? ''));
+    if (in_array($category, ['Basic Groom', 'Premium Groom'], true) && $serviceName !== '') {
+        return $category . ' - ' . $serviceName;
+    }
+
+    return $serviceName;
+}
+
 function customer_booking_get_selection(mysqli $conn, int $customerId): ?array
 {
     $petId = $_SESSION['booking_pet_id'] ?? null;

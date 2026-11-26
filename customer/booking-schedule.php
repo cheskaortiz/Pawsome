@@ -151,7 +151,7 @@ foreach ($slotOptions as $option) {
 require __DIR__ . '/../includes/customer_header.php';
 ?>
 <section class="customer-page-heading">
-    <span class="eyebrow">Step 3 · <?= auth_escape((string) $selection['service_name']) ?> for <?= auth_escape((string) $selection['pet_name']) ?></span>
+    <span class="eyebrow">Step 3 · <?= auth_escape(customer_booking_service_label($selection)) ?> for <?= auth_escape((string) $selection['pet_name']) ?></span>
     <h1>Choose a Date <span>&amp; Time</span></h1>
     <p>Appointments are available Monday through Saturday, 9:00 AM–5:00 PM, with a lunch break from noon to 1:00 PM.</p>
 </section>

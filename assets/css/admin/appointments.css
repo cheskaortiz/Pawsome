@@ -96,7 +96,65 @@
 }
 
 .admin-appointments-table {
-    min-width: 1380px;
+    width: 100%;
+    min-width: 1200px;
+    table-layout: fixed;
+}
+
+.admin-app .admin-appointments-table th,
+.admin-app .admin-appointments-table td {
+    padding-right: 8px;
+    padding-left: 8px;
+}
+
+.admin-appointments-table th:nth-child(1),
+.admin-appointments-table td:nth-child(1) {
+    width: 5%;
+}
+
+.admin-appointments-table th:nth-child(2),
+.admin-appointments-table td:nth-child(2) {
+    width: 10%;
+}
+
+.admin-appointments-table th:nth-child(3),
+.admin-appointments-table td:nth-child(3) {
+    width: 9%;
+}
+
+.admin-appointments-table th:nth-child(4),
+.admin-appointments-table td:nth-child(4) {
+    width: 15%;
+}
+
+.admin-appointments-table th:nth-child(5),
+.admin-appointments-table td:nth-child(5) {
+    width: 9%;
+}
+
+.admin-appointments-table th:nth-child(6),
+.admin-appointments-table td:nth-child(6) {
+    width: 16%;
+}
+
+.admin-appointments-table th:nth-child(7),
+.admin-appointments-table td:nth-child(7) {
+    width: 11%;
+}
+
+.admin-appointments-table th:nth-child(8),
+.admin-appointments-table td:nth-child(8) {
+    width: 8%;
+}
+
+.admin-appointments-table th:nth-child(9),
+.admin-appointments-table td:nth-child(9) {
+    width: 8%;
+}
+
+.admin-appointments-table th:nth-child(10),
+.admin-appointments-table td:nth-child(10) {
+    width: 9%;
 }
 
 .admin-appointment-manage {
@@ -127,8 +185,8 @@
 }
 
 .admin-appointment-actions {
-    min-width: 210px;
-    vertical-align: top !important;
+    min-width: 0;
+    vertical-align: middle !important;
 }
 
 .admin-appointment-details-trigger {

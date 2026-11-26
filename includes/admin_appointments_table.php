@@ -41,25 +41,8 @@
                             $manilaTimezone
                         );
                         $requestedAt = new DateTimeImmutable((string) $appointment['created_at'], $manilaTimezone);
-                        $availableActions = [];
-                        foreach ($actionTransitions as $actionKey => $transition) {
-                            if (in_array($status, $transition['from'], true)) {
-                                $availableActions[] = [
-                                    $actionKey,
-                                    $transition['label'],
-                                    $transition['button_class'],
-                                    $transition['confirmation_prompt'],
-                                ];
-                            }
-                        }
                         $hasGroomingRecord = (int) $appointment['has_grooming_record'] === 1;
                         $priceDisplay = appointment_price_display($appointment);
-                        if ($hasGroomingRecord) {
-                            $availableActions = array_values(array_filter(
-                                $availableActions,
-                                static fn (array $availableAction): bool => $availableAction[0] !== 'cancel'
-                            ));
-                        }
                         $petDescription = array_filter([
                             (string) $appointment['species'],
                             (string) ($appointment['breed'] ?? ''),
@@ -82,7 +65,7 @@
                                 <span class="admin-table-muted"><?= auth_escape(implode(' · ', $petDescription)) ?></span>
                             </td>
                             <td>
-                                <strong><?= auth_escape((string) $appointment['service_name']) ?></strong>
+                                <strong><?= auth_escape((string) $appointment['service_display_name']) ?></strong>
                                 <span class="admin-table-muted"><?= (int) $appointment['duration'] ?> min</span>
                             </td>
                             <td>
@@ -117,7 +100,7 @@
                                     data-phone="<?= auth_escape(trim((string) ($appointment['phone'] ?? '')) ?: 'Not provided') ?>"
                                     data-pet-name="<?= auth_escape((string) $appointment['pet_name']) ?>"
                                     data-pet="<?= auth_escape(implode(' · ', $petDescription)) ?>"
-                                    data-service="<?= auth_escape((string) $appointment['service_name']) ?>"
+                                    data-service="<?= auth_escape((string) $appointment['service_display_name']) ?>"
                                     data-price="<?= auth_escape($priceDisplay['formatted'] . ' · ' . $priceDisplay['source']) ?>"
                                     data-duration="<?= (int) $appointment['duration'] ?> minutes"
                                     data-status="<?= auth_escape($statusLabel) ?>"
@@ -125,23 +108,6 @@
                                     data-notes="<?= auth_escape(trim((string) ($appointment['notes'] ?? '')) ?: 'None provided') ?>"
                                     data-requested="<?= auth_escape($requestedAt->format('M j, Y g:i A')) ?>"
                                 >View Details</button>
-
-                                <?php if ($availableActions): ?>
-                                    <div class="admin-appointment-action-group">
-                                        <?php foreach ($availableActions as [$action, $label, $buttonClass, $confirmationPrompt]): ?>
-                                            <form
-                                                method="post"
-                                                action="<?= auth_escape($returnUrl) ?>"
-                                                onsubmit="return confirm('<?= auth_escape($confirmationPrompt) ?>');"
-                                            >
-                                                <input type="hidden" name="csrf_token" value="<?= auth_escape($csrfToken) ?>">
-                                                <input type="hidden" name="appointment_id" value="<?= (int) $appointment['appointment_id'] ?>">
-                                                <input type="hidden" name="appointment_action" value="<?= auth_escape($action) ?>">
-                                                <button class="admin-appointment-action is-<?= auth_escape($buttonClass) ?>" type="submit"><?= auth_escape($label) ?></button>
-                                            </form>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

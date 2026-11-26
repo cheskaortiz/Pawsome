@@ -49,7 +49,12 @@ if ($editId !== null) {
         $statement = $conn->prepare(
             'SELECT r.review_id, r.appointment_id, r.rating, r.feedback, r.status AS review_status,
                     a.status AS appointment_status, a.appointment_date, a.appointment_time,
-                    p.pet_name, s.service_name
+                    p.pet_name,
+                    CASE
+                        WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
+                        THEN CONCAT_WS(\' - \', s.category, s.service_name)
+                        ELSE s.service_name
+                    END AS service_display_name
              FROM reviews AS r
              INNER JOIN appointments AS a
                 ON a.appointment_id = r.appointment_id AND a.user_id = r.user_id
@@ -84,7 +89,12 @@ if ($editId !== null) {
     try {
         $statement = $conn->prepare(
             "SELECT a.appointment_id, a.appointment_date, a.appointment_time,
-                    p.pet_name, s.service_name
+                    p.pet_name,
+                    CASE
+                        WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                        THEN CONCAT_WS(' - ', s.category, s.service_name)
+                        ELSE s.service_name
+                    END AS service_display_name
              FROM appointments AS a
              INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
              INNER JOIN services AS s ON s.service_id = a.service_id
@@ -256,7 +266,12 @@ try {
     $statement = $conn->prepare(
         'SELECT r.review_id, r.appointment_id, r.rating, r.feedback, r.status AS review_status,
                 r.created_at, r.updated_at, a.status AS appointment_status, a.appointment_date,
-                p.pet_name, s.service_name
+                p.pet_name,
+                CASE
+                    WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
+                    THEN CONCAT_WS(\' - \', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name
          FROM reviews AS r
          INNER JOIN appointments AS a
             ON a.appointment_id = r.appointment_id AND a.user_id = r.user_id
@@ -277,7 +292,12 @@ try {
 try {
     $statement = $conn->prepare(
         "SELECT a.appointment_id, a.appointment_date, a.appointment_time,
-                p.pet_name, s.service_name
+                p.pet_name,
+                CASE
+                    WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                    THEN CONCAT_WS(' - ', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name
          FROM appointments AS a
          INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
          INNER JOIN services AS s ON s.service_id = a.service_id
@@ -325,7 +345,7 @@ require __DIR__ . '/../includes/customer_header.php';
             <div>
                 <span class="eyebrow"><?= $formMode === 'edit' ? 'Update your feedback' : 'Completed appointment' ?></span>
                 <h2 id="review-form-heading"><?= auth_escape($formHeading) ?></h2>
-                <p><?= auth_escape((string) $formAppointment['pet_name']) ?> · <?= auth_escape((string) $formAppointment['service_name']) ?> · <?= auth_escape(date('M j, Y', strtotime((string) $formAppointment['appointment_date']))) ?></p>
+                <p><?= auth_escape((string) $formAppointment['pet_name']) ?> · <?= auth_escape((string) $formAppointment['service_display_name']) ?> · <?= auth_escape(date('M j, Y', strtotime((string) $formAppointment['appointment_date']))) ?></p>
                 <?php if ($formMode === 'edit'): ?>
                     <p class="customer-review-form-status">Current status: <?= auth_escape((string) $editingReview['review_status']) ?>. Saving changes will return it to Pending approval.</p>
                 <?php endif; ?>
@@ -387,7 +407,7 @@ require __DIR__ . '/../includes/customer_header.php';
             <?php foreach ($eligibleAppointments as $appointment): ?>
                 <article class="customer-review-eligible-card">
                     <div>
-                        <h3><?= auth_escape((string) $appointment['pet_name']) ?> · <?= auth_escape((string) $appointment['service_name']) ?></h3>
+                        <h3><?= auth_escape((string) $appointment['pet_name']) ?> · <?= auth_escape((string) $appointment['service_display_name']) ?></h3>
                         <p>Appointment #<?= (int) $appointment['appointment_id'] ?> · <?= auth_escape(date('M j, Y', strtotime((string) $appointment['appointment_date']))) ?></p>
                     </div>
                     <a class="customer-review-action" href="reviews.php?appointment_id=<?= (int) $appointment['appointment_id'] ?>">Write Review</a>
@@ -423,7 +443,7 @@ require __DIR__ . '/../includes/customer_header.php';
                 <article class="customer-review-card">
                     <header class="customer-review-card-header">
                         <div>
-                            <h3><?= auth_escape((string) $review['pet_name']) ?> · <?= auth_escape((string) $review['service_name']) ?></h3>
+                            <h3><?= auth_escape((string) $review['pet_name']) ?> · <?= auth_escape((string) $review['service_display_name']) ?></h3>
                             <p>Appointment #<?= (int) $review['appointment_id'] ?> · <?= auth_escape(date('M j, Y', strtotime((string) $review['appointment_date']))) ?></p>
                         </div>
                         <div class="customer-review-card-actions">

@@ -22,7 +22,12 @@ try {
                 gr.grooming_date, gr.grooming_notes, gr.created_at,
                 a.appointment_date, a.appointment_time, a.status AS appointment_status,
                 a.service_price_at_booking, a.service_price_snapshot_saved,
-                s.service_name, s.category, s.species AS service_species, s.pet_size, s.duration,
+                CASE
+                    WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                    THEN CONCAT_WS(' - ', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name,
+                s.category, s.species AS service_species, s.pet_size, s.duration,
                 p.pet_name, p.species AS pet_species, p.breed, p.gender, p.age, p.birthday,
                 p.photo_path, p.color_markings, p.weight_kg, p.breed_size, p.notes AS pet_notes,
                 u.user_id AS customer_id, u.first_name AS customer_first_name,
@@ -138,8 +143,7 @@ $petAge = $record['birthday'] !== null && $record['birthday'] !== ''
                             <div><dt>Scheduled date</dt><dd><?= auth_escape($appointmentDateTime->format('M j, Y')) ?></dd></div>
                             <div><dt>Scheduled time</dt><dd><?= auth_escape($appointmentDateTime->format('g:i A')) ?></dd></div>
                             <div><dt>Grooming date</dt><dd><?= auth_escape($groomingDate->format('M j, Y')) ?></dd></div>
-                            <div><dt>Service</dt><dd><?= auth_escape((string) $record['service_name']) ?></dd></div>
-                            <div><dt>Category</dt><dd><?= auth_escape((string) $record['category']) ?></dd></div>
+                            <div><dt>Service</dt><dd><?= auth_escape((string) $record['service_display_name']) ?></dd></div>
                             <div><dt>Duration</dt><dd><?= (int) $record['duration'] ?> minutes</dd></div>
                             <div><dt>Price</dt><dd><?= auth_escape($priceDisplay['formatted']) ?><span class="admin-table-muted"><?= auth_escape($priceDisplay['source']) ?></span></dd></div>
                             <div><dt>Appointment status</dt><dd><?= auth_escape($appointmentStatus) ?></dd></div>

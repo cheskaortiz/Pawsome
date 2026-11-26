@@ -174,6 +174,11 @@ try {
                 p.pet_id, p.pet_name, p.species, p.breed, p.gender, p.age, p.birthday,
                 p.notes AS pet_notes, p.photo_path, p.vaccination_proof_path,
                 p.color_markings, p.weight_kg, p.breed_size,
+                CASE
+                    WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
+                    THEN CONCAT_WS(\' - \', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name,
                 s.service_name, s.duration, s.price AS current_service_price,
                 a.service_price_at_booking, a.service_price_snapshot_saved
          FROM appointments AS a
@@ -302,16 +307,32 @@ $csrfToken = auth_csrf_token();
                         <h1>Appointment <span>#<?= (int) $appointmentId ?></span></h1>
                         <p>Review the booking, customer, and pet details, then update its grooming status.</p>
                     </div>
-                    <span class="customer-status customer-status--<?= auth_escape($statusClass) ?>">
-                        <?= auth_escape($statusLabel) ?>
-                    </span>
                 </section>
 
-                <section class="admin-panel admin-appointment-detail-card admin-appointment-status-card" aria-labelledby="appointment-actions-title">
+                <section class="admin-panel admin-appointment-detail-card admin-appointment-status-card" aria-labelledby="appointment-booked-service-title">
                     <div class="admin-panel-heading">
-                        <div>
-                            <span class="eyebrow">Current status: <?= auth_escape($statusLabel) ?></span>
-                            <h2 id="appointment-actions-title">Appointment Actions</h2>
+                        <div class="admin-appointment-status-summary">
+                            <span class="customer-status customer-status--<?= auth_escape($statusClass) ?> admin-appointment-status-badge">
+                                <svg viewBox="0 0 20 20" aria-hidden="true">
+                                    <?php if ($statusClass === 'pending' || $statusClass === 'in-progress'): ?>
+                                        <circle cx="10" cy="10" r="7"></circle>
+                                        <path d="M10 6v4l2.5 1.5"></path>
+                                    <?php elseif (in_array($statusClass, ['confirmed', 'ready-for-pickup', 'completed'], true)): ?>
+                                        <circle cx="10" cy="10" r="7"></circle>
+                                        <path d="m6.5 10 2.3 2.3 4.7-5"></path>
+                                    <?php elseif (in_array($statusClass, ['cancelled', 'rejected'], true)): ?>
+                                        <circle cx="10" cy="10" r="7"></circle>
+                                        <path d="m7 7 6 6m0-6-6 6"></path>
+                                    <?php else: ?>
+                                        <circle cx="10" cy="10" r="7"></circle>
+                                        <path d="M10 9v5m0-8h.01"></path>
+                                    <?php endif; ?>
+                                </svg>
+                                <?= auth_escape($statusLabel) ?>
+                            </span>
+                            <h2 id="appointment-booked-service-title" class="admin-appointment-booked-service">
+                                Booked service: <?= auth_escape((string) $appointment['service_display_name']) ?>
+                            </h2>
                         </div>
                     </div>
                     <?php if ($availableActions): ?>
@@ -350,7 +371,7 @@ $csrfToken = auth_csrf_token();
                         </div>
                         <dl class="admin-appointment-detail-list">
                             <div><dt>Appointment ID</dt><dd>#<?= (int) $appointmentId ?></dd></div>
-                            <div><dt>Service</dt><dd><?= auth_escape((string) $appointment['service_name']) ?></dd></div>
+                            <div><dt>Service</dt><dd><?= auth_escape((string) $appointment['service_display_name']) ?></dd></div>
                             <div>
                                 <dt>Service price</dt>
                                 <dd>

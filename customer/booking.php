@@ -321,7 +321,7 @@ require __DIR__ . '/../includes/customer_header.php';
                 <?php endif; ?>
                 <p class="booking-selection-summary" id="booking-selection-summary" role="status">
                     <?php if ($selectedService !== null): ?>
-                        Selected: <strong><?= auth_escape((string) $selectedService['service_name']) ?></strong>
+                        Selected: <strong><?= auth_escape(customer_booking_service_label($selectedService)) ?></strong>
                         · <?= auth_escape(grooming_format_service_price($selectedService)) ?>
                         · <?= (int) $selectedService['duration'] ?> min
                     <?php else: ?>
@@ -357,6 +357,7 @@ require __DIR__ . '/../includes/customer_header.php';
                                         <?php
                                         $serviceAvailable = $service['status'] === 'Available';
                                         $servicePrice = grooming_format_service_price($service);
+                                        $serviceDisplayName = customer_booking_service_label($service);
                                         ?>
                                         <article
                                             class="booking-service-option<?= $serviceAvailable ? '' : ' is-unavailable' ?>"
@@ -368,16 +369,16 @@ require __DIR__ . '/../includes/customer_header.php';
                                                 type="radio"
                                                 name="service_id"
                                                 value="<?= (int) $service['service_id'] ?>"
-                                                data-service-name="<?= auth_escape((string) $service['service_name']) ?>"
+                                                data-service-name="<?= auth_escape($serviceDisplayName) ?>"
                                                 data-service-price="<?= auth_escape($servicePrice) ?>"
                                                 data-service-duration="<?= (int) $service['duration'] ?>"
-                                                aria-label="<?= auth_escape((string) $service['service_name'] . ', ' . $servicePrice . ', ' . (int) $service['duration'] . ' minutes') ?>"
+                                                aria-label="<?= auth_escape($serviceDisplayName . ', ' . $servicePrice . ', ' . (int) $service['duration'] . ' minutes') ?>"
                                                 <?= (int) $service['service_id'] === $selectedServiceId ? 'checked' : '' ?>
                                                 <?= $serviceAvailable ? 'required' : 'disabled' ?>
                                             >
                                             <div class="booking-service-option-content">
                                                 <span class="booking-service-option-heading">
-                                                    <strong><?= auth_escape((string) $service['service_name']) ?></strong>
+                                                    <strong><?= auth_escape($serviceDisplayName) ?></strong>
                                                     <?php if (!$serviceAvailable): ?>
                                                         <span class="booking-unavailable-tag">Unavailable</span>
                                                     <?php endif; ?>
@@ -390,7 +391,7 @@ require __DIR__ . '/../includes/customer_header.php';
                                                     type="button"
                                                     aria-expanded="false"
                                                     aria-controls="booking-description-<?= (int) $service['service_id'] ?>"
-                                                    aria-label="Read More about <?= auth_escape((string) $service['service_name']) ?>"
+                                                    aria-label="Read More about <?= auth_escape($serviceDisplayName) ?>"
                                                 >Read More</button>
                                                 <span class="booking-service-meta">
                                                     <strong><?= auth_escape($servicePrice) ?></strong>

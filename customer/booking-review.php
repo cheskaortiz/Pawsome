@@ -303,7 +303,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (!isset($_SESSION['booking_submission_token']) || !is_string($_SESSION['booking_submission_token'])) {
     $_SESSION['booking_submission_token'] = $submissionToken;
 }
-$category = (string) $selection['category'];
 $formattedBookingDate = (new DateTimeImmutable($bookingDate, customer_booking_timezone()))->format('l, F j, Y');
 $formattedBookingTime = (new DateTimeImmutable($bookingDate . ' ' . $bookingTime, customer_booking_timezone()))->format('g:i A');
 
@@ -354,8 +353,7 @@ require __DIR__ . '/../includes/customer_header.php';
     <section class="booking-review-card booking-review-card-wide" aria-labelledby="review-booking-title">
         <h2 id="review-booking-title">Booking information</h2>
         <dl class="customer-detail-list">
-            <div><dt>Category</dt><dd><?= auth_escape($category) ?></dd></div>
-            <div><dt>Service</dt><dd><?= auth_escape((string) $selection['service_name']) ?></dd></div>
+            <div><dt>Service</dt><dd><?= auth_escape(customer_booking_service_label($selection)) ?></dd></div>
             <div><dt>Appointment date</dt><dd><?= auth_escape($formattedBookingDate) ?></dd></div>
             <div><dt>Appointment time</dt><dd><?= auth_escape($formattedBookingTime) ?></dd></div>
             <div><dt>Service duration</dt><dd><?= (int) $selection['duration'] ?> minutes</dd></div>

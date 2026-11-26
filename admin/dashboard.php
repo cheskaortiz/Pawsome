@@ -61,7 +61,12 @@ $pendingLoadError = false;
 try {
     $pendingAppointments = $fetchRows(
         "SELECT a.appointment_id, a.appointment_date, a.appointment_time,
-                p.pet_name, p.species, p.breed_size, s.service_name,
+                p.pet_name, p.species, p.breed_size,
+                CASE
+                    WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                    THEN CONCAT_WS(' - ', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name,
                 s.price AS current_service_price,
                 a.service_price_at_booking, a.service_price_snapshot_saved
          FROM appointments AS a
@@ -81,7 +86,12 @@ $scheduleLoadError = false;
 try {
     $todayAppointments = $fetchRows(
         "SELECT a.appointment_id, a.appointment_time, a.status,
-                p.pet_name, s.service_name
+                p.pet_name,
+                CASE
+                    WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                    THEN CONCAT_WS(' - ', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name
          FROM appointments AS a
          INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
          INNER JOIN services AS s ON s.service_id = a.service_id
@@ -179,7 +189,12 @@ $popularServices = [];
 $popularServicesLoadError = false;
 try {
     $popularServices = $fetchRows(
-        "SELECT s.service_name, s.category, COUNT(a.appointment_id) AS booking_count
+        "SELECT CASE
+                   WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                   THEN CONCAT_WS(' - ', s.category, s.service_name)
+                   ELSE s.service_name
+               END AS service_display_name,
+               s.service_name, s.category, COUNT(a.appointment_id) AS booking_count
          FROM services AS s
          LEFT JOIN appointments AS a
             ON a.service_id = s.service_id
@@ -240,7 +255,12 @@ $recentAppointmentsLoadError = false;
 try {
     $recentAppointments = $fetchRows(
         'SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
-                u.first_name, u.last_name, p.pet_name, s.service_name,
+                u.first_name, u.last_name, p.pet_name,
+                CASE
+                    WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
+                    THEN CONCAT_WS(\' - \', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name,
                 s.price AS current_service_price,
                 a.service_price_at_booking, a.service_price_snapshot_saved
          FROM appointments AS a
@@ -409,9 +429,8 @@ $pendingAppointmentCount = $summaryLoadError
                                         );
                                         $priceDisplay = appointment_price_display($appointment);
                                         $petDescription = array_filter([
-                                            (string) ($appointment['breed_size'] ?? ''),
                                             (string) ($appointment['species'] ?? ''),
-                                            (string) $appointment['service_name'],
+                                            (string) $appointment['service_display_name'],
                                         ], static fn (string $value): bool => trim($value) !== '');
                                         ?>
                                         <li class="admin-dashboard-action-item">
@@ -479,7 +498,7 @@ $pendingAppointmentCount = $summaryLoadError
                                             <time datetime="<?= auth_escape($appointmentTime->format('Y-m-d\TH:i:s')) ?>"><?= auth_escape($appointmentTime->format('g:i A')) ?></time>
                                             <span class="admin-dashboard-schedule-description">
                                                 <strong><?= auth_escape((string) $appointment['pet_name']) ?></strong>
-                                                <small><?= auth_escape((string) $appointment['service_name']) ?></small>
+                                                <small><?= auth_escape((string) $appointment['service_display_name']) ?></small>
                                             </span>
                                             <span class="customer-status customer-status--<?= auth_escape($statusClass) ?>"><?= auth_escape($status) ?></span>
                                         </li>
@@ -586,8 +605,7 @@ $pendingAppointmentCount = $summaryLoadError
                                     <?php foreach ($popularServices as $service): ?>
                                         <li>
                                             <span>
-                                                <strong><?= auth_escape((string) $service['service_name']) ?></strong>
-                                                <small><?= auth_escape((string) $service['category']) ?></small>
+                                                <strong><?= auth_escape((string) $service['service_display_name']) ?></strong>
                                             </span>
                                             <strong><?= number_format((int) $service['booking_count']) ?></strong>
                                         </li>
@@ -707,7 +725,7 @@ $pendingAppointmentCount = $summaryLoadError
                                             </td>
                                             <td><?= auth_escape(trim((string) $appointment['first_name'] . ' ' . (string) $appointment['last_name'])) ?></td>
                                             <td><?= auth_escape((string) $appointment['pet_name']) ?></td>
-                                            <td><?= auth_escape((string) $appointment['service_name']) ?></td>
+                                            <td><?= auth_escape((string) $appointment['service_display_name']) ?></td>
                                             <td title="<?= auth_escape($priceDisplay['source']) ?>"><?= auth_escape($priceDisplay['formatted']) ?></td>
                                             <td><span class="customer-status customer-status--<?= auth_escape($statusClass) ?>"><?= auth_escape($status) ?></span></td>
                                         </tr>

@@ -219,7 +219,12 @@ $reviewLoadError = false;
 try {
     $sql =
         'SELECT r.review_id, r.appointment_id, r.rating, r.feedback, r.status, r.created_at,
-                u.first_name, u.last_name, p.pet_name, s.service_name
+                u.first_name, u.last_name, p.pet_name,
+                CASE
+                    WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
+                    THEN CONCAT_WS(\' - \', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name
          FROM reviews AS r
          INNER JOIN appointments AS a
             ON a.appointment_id = r.appointment_id AND a.user_id = r.user_id
@@ -234,11 +239,12 @@ try {
         $conditions[] = "(CONCAT_WS(' ', u.first_name, u.last_name) LIKE ?
             OR p.pet_name LIKE ?
             OR s.service_name LIKE ?
+            OR s.category LIKE ?
             OR r.feedback LIKE ?
             OR CAST(r.appointment_id AS CHAR) LIKE ?)";
         $pattern = '%' . $searchTerm . '%';
-        array_push($parameters, $pattern, $pattern, $pattern, $pattern, $pattern);
-        $parameterTypes .= 'sssss';
+        array_push($parameters, $pattern, $pattern, $pattern, $pattern, $pattern, $pattern);
+        $parameterTypes .= 'ssssss';
     }
     if ($ratingFilter !== 'All') {
         $conditions[] = 'r.rating = ?';
@@ -304,7 +310,7 @@ $renderReviewCards = static function (array $reviewRows) use ($csrfToken, $retur
             $reviewData = [
                 'customer' => $customerName,
                 'pet' => (string) $review['pet_name'],
-                'service' => (string) $review['service_name'],
+                'service' => (string) $review['service_display_name'],
                 'appointment' => (int) $review['appointment_id'],
                 'rating' => $rating,
                 'feedback' => (string) $review['feedback'],
@@ -320,7 +326,7 @@ $renderReviewCards = static function (array $reviewRows) use ($csrfToken, $retur
                 <header class="admin-review-card-header">
                     <div class="admin-review-card-customer">
                         <h3><?= auth_escape($customerName) ?></h3>
-                        <p><?= auth_escape((string) $review['pet_name']) ?> · <?= auth_escape((string) $review['service_name']) ?></p>
+                        <p><?= auth_escape((string) $review['pet_name']) ?> · <?= auth_escape((string) $review['service_display_name']) ?></p>
                     </div>
                     <span class="admin-review-status is-<?= strtolower(auth_escape($status)) ?>"><?= auth_escape($status) ?></span>
                 </header>
