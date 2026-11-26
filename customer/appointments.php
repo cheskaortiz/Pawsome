@@ -62,6 +62,7 @@ try {
         "SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status,
             p.pet_name, s.service_name, s.price AS current_service_price,
             a.service_price_at_booking, a.service_price_snapshot_saved,
+                r.review_id,
                 CASE
                     WHEN a.status IN ('Pending', 'Confirmed')
                      AND NOT EXISTS (
@@ -75,6 +76,7 @@ try {
          FROM appointments AS a
          INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
          INNER JOIN services AS s ON s.service_id = a.service_id
+         LEFT JOIN reviews AS r ON r.appointment_id = a.appointment_id AND r.user_id = a.user_id
          WHERE a.user_id = ?
          ORDER BY a.appointment_date DESC, a.appointment_time DESC"
     );
@@ -161,6 +163,14 @@ require __DIR__ . '/../includes/customer_header.php';
                                     <input type="hidden" name="appointment_id" value="<?= (int) $appointment['appointment_id'] ?>">
                                     <button class="appointment-cancel-button" type="submit">Cancel</button>
                                 </form>
+                            <?php endif; ?>
+                            <?php if ($status === 'Completed'): ?>
+                                <a
+                                    class="appointment-review-link"
+                                    href="<?= !empty($appointment['review_id'])
+                                        ? 'reviews.php?edit=' . (int) $appointment['review_id']
+                                        : 'reviews.php?appointment_id=' . (int) $appointment['appointment_id'] ?>"
+                                ><?= !empty($appointment['review_id']) ? 'Edit Review' : 'Write Review' ?></a>
                             <?php endif; ?>
                         </td>
                     </tr>

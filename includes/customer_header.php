@@ -7,6 +7,7 @@ $customerNavigation = [
     'home' => ['Home', 'dashboard.php'],
     'pets' => ['My Pets', 'pets.php'],
     'appointments' => ['Appointments', 'appointments.php'],
+    'reviews' => ['My Reviews', 'reviews.php'],
     'pricelist' => ['Pricelist', 'pricelist.php'],
 ];
 ?>
@@ -24,6 +25,9 @@ $customerNavigation = [
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/shared/portal.css">
     <link rel="stylesheet" href="../assets/css/customer/customer.css">
+    <?php if ($activeCustomerPage === 'reviews'): ?>
+        <link rel="stylesheet" href="../assets/css/customer/reviews.css">
+    <?php endif; ?>
 </head>
 <body class="customer-app">
     <a class="skip-link" href="#customer-main">Skip to content</a>

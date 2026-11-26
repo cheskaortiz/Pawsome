@@ -69,11 +69,14 @@
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Groomers / Staff
         </a>
-        <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true">
+        <a
+            class="customer-nav-link<?= $activeAdminPage === 'reviews' ? ' is-active' : '' ?>"
+            href="reviews.php"
+            <?= $activeAdminPage === 'reviews' ? 'aria-current="page"' : '' ?>
+        >
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
             Reviews
-            <span class="admin-nav-coming-soon">Coming Soon</span>
-        </span>
+        </a>
         <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true">
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5m0 14h17M8 16v-5m5 5V7m5 9V3"/></svg>
             Reports
