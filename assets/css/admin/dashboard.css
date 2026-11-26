@@ -2,19 +2,65 @@
     background: #fffdf8;
 }
 
+.admin-layout {
+    grid-template-columns: 232px minmax(0, 1fr);
+}
+
 .admin-sidebar {
+    overflow-y: auto;
+    padding: 20px 14px 14px;
     background:
         radial-gradient(circle at 12% 0, rgba(255, 255, 255, .72), transparent 16rem),
         var(--yellow-surface);
 }
 
 .admin-navigation {
+    gap: 4px;
+}
+
+.admin-sidebar .customer-brand {
     gap: 7px;
+    margin: 0 0 18px 4px;
+}
+
+.admin-sidebar .brand-mark {
+    width: 33px;
+    height: 33px;
+    border-radius: 10px;
+}
+
+.admin-sidebar .brand-mark svg {
+    width: 22px;
+    height: 22px;
+}
+
+.admin-sidebar .brand-name {
+    font-size: 20px;
+}
+
+.admin-nav-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+}
+
+.admin-sidebar .customer-nav-link {
+    min-height: 37px;
+    gap: 9px;
+    padding-inline: 10px;
+    border-radius: 10px;
+    font-size: 13px;
 }
 
 .admin-nav-placeholder {
     color: #858b90;
     cursor: default;
+    pointer-events: none;
 }
 
 .admin-nav-placeholder:hover {
@@ -22,25 +68,57 @@
     background: transparent;
 }
 
-.admin-nav-placeholder .customer-nav-indicator {
-    border-color: #b7c1c6;
-}
-
 .admin-nav-coming-soon {
     margin-left: auto;
+    white-space: nowrap;
     color: #868c91;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 800;
     letter-spacing: .04em;
     text-transform: uppercase;
+}
+
+.admin-sidebar-bottom {
+    display: grid;
+    gap: 2px;
+    margin-top: auto;
+    padding: 9px 0 0;
+}
+
+.admin-sidebar-bottom .admin-profile-link {
+    gap: 9px;
+}
+
+.admin-profile-avatar {
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+}
+
+.admin-sidebar-logout-form {
+    margin: 0;
+}
+
+.admin-sidebar-logout {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-sidebar-logout:hover {
+    color: var(--ink);
+    background: rgba(121, 173, 208, .22);
 }
 
 .admin-topbar {
     gap: 20px;
 }
 
-.admin-topbar form {
-    margin: 0;
+.admin-topbar > form {
+    display: none;
 }
 
 .admin-logout {
@@ -379,6 +457,15 @@
 }
 
 @media (max-width: 920px) {
+    .admin-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-sidebar {
+        overflow: visible;
+        padding: 12px 16px 10px;
+    }
+
     .admin-navigation {
         gap: 5px;
     }
@@ -386,7 +473,23 @@
     .admin-navigation .customer-nav-link {
         min-width: 0;
         flex: 0 1 auto;
-        gap: 7px;
+        gap: 8px;
+    }
+
+    .admin-sidebar .customer-nav-link {
+        min-height: 36px;
+        padding-inline: 9px;
+        font-size: 12px;
+    }
+
+    .admin-sidebar .customer-brand {
+        margin-bottom: 11px;
+    }
+
+    .admin-sidebar-bottom {
+        display: grid;
+        margin-top: 9px;
+        padding: 8px 3px 0;
     }
 }
 
@@ -433,11 +536,19 @@
     .admin-navigation .customer-nav-link {
         flex: 1 1 calc(50% - 5px);
         justify-content: flex-start;
-        font-size: 11px;
+        font-size: 10px;
+    }
+
+    .admin-sidebar-bottom {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-navigation .admin-nav-placeholder {
+        flex: 1 1 100%;
     }
 
     .admin-nav-coming-soon {
-        font-size: 8px;
+        font-size: 7px;
     }
 
     .admin-logout {
