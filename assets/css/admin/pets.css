@@ -1,0 +1,151 @@
+.admin-pets-main {
+    gap: 20px;
+}
+
+.admin-pet-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 260px));
+}
+
+.admin-pets-panel-heading {
+    align-items: flex-end;
+}
+
+.admin-pet-filter-form {
+    display: grid;
+    width: min(700px, 72%);
+    grid-template-columns: minmax(180px, 1.5fr) repeat(3, minmax(110px, 1fr));
+    gap: 9px;
+}
+
+.admin-pet-filter-field {
+    min-width: 0;
+}
+
+.admin-pet-filter-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: #68727a;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.admin-pet-filter-field input,
+.admin-pet-filter-field select {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 10px;
+    border: 1px solid #dde5e7;
+    border-radius: 10px;
+    color: #505961;
+    background: #fff;
+    font: inherit;
+    font-size: 12px;
+}
+
+.admin-pet-filter-field input:focus,
+.admin-pet-filter-field select:focus {
+    border-color: #8db9d6;
+    outline: 3px solid rgba(89, 153, 195, .18);
+}
+
+.admin-pet-feedback {
+    margin: 12px 20px 0;
+    padding: 10px 12px;
+    border: 1px solid #e8b8b2;
+    border-radius: 9px;
+    color: #843d35;
+    background: #fdf2ef;
+    font-size: 12px;
+}
+
+.admin-pets-table {
+    min-width: 1080px;
+}
+
+.admin-pet-table-photo,
+.admin-pet-table-placeholder {
+    display: grid;
+    width: 54px;
+    height: 54px;
+    place-items: center;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #f6f3e9;
+}
+
+.admin-pet-table-placeholder {
+    color: #91a8b7;
+    font-size: 22px;
+}
+
+.admin-vaccination-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.admin-vaccination-status.is-vaccinated {
+    color: #285d38;
+    background: #e5f5e9;
+}
+
+.admin-vaccination-status.is-not-vaccinated {
+    color: #765a20;
+    background: #fff3cc;
+}
+
+.admin-pet-details-button {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 11px;
+    border: 1px solid #c9deeb;
+    border-radius: 8px;
+    color: #315d78;
+    background: #f2f8fc;
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.admin-pet-details-button:hover {
+    border-color: #9dc3db;
+    background: #eaf4fb;
+}
+
+.admin-pet-details-button:focus-visible {
+    outline: 3px solid rgba(89, 153, 195, .45);
+    outline-offset: 2px;
+}
+
+@media (max-width: 1120px) {
+    .admin-pets-panel-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-pet-filter-form {
+        width: 100%;
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-pet-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-pet-filter-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-pet-search-field {
+        grid-column: 1 / -1;
+    }
+}
