@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'grooming-records';
@@ -121,6 +122,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $insert->execute();
         $recordId = (int) $conn->insert_id;
         $insert->close();
+        activity_log_current_user(
+            $conn,
+            'grooming_record.created',
+            'Created grooming record #' . $recordId . ' for appointment #' . $appointmentId . '.',
+            [
+                'record_id' => $recordId,
+                'appointment_id' => $appointmentId,
+                'pet_id' => $petId,
+                'grooming_date' => $groomingDate,
+            ]
+        );
         $conn->commit();
         $transactionStarted = false;
         $sendJson(['success' => true, 'record_id' => $recordId], 201);

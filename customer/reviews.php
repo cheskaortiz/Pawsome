@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $pageTitle = 'My Reviews';
 $activeCustomerPage = 'reviews';
@@ -194,6 +195,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $statement->bind_param('isii', $rating, $feedback, $reviewId, $customerId);
                     $statement->execute();
                     $statement->close();
+                    activity_log_current_user(
+                        $conn,
+                        'review.updated',
+                        'Updated review #' . $reviewId . '.',
+                        [
+                            'review_id' => $reviewId,
+                            'appointment_id' => $appointmentId,
+                            'rating' => $rating,
+                            'status' => 'Pending',
+                        ]
+                    );
                     $conn->commit();
                     header('Location: reviews.php?updated=1', true, 303);
                     exit;
@@ -204,7 +216,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                     $statement->bind_param('iiis', $appointmentId, $customerId, $rating, $feedback);
                     $statement->execute();
+                    $reviewId = (int) $conn->insert_id;
                     $statement->close();
+                    activity_log_current_user(
+                        $conn,
+                        'review.submitted',
+                        'Submitted review #' . $reviewId . '.',
+                        [
+                            'review_id' => $reviewId,
+                            'appointment_id' => $appointmentId,
+                            'rating' => $rating,
+                            'status' => 'Pending',
+                        ]
+                    );
                     $conn->commit();
                     header('Location: reviews.php?saved=1', true, 303);
                     exit;

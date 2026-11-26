@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 auth_redirect_logged_in();
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $error = '';
 $identity = '';
@@ -41,6 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } elseif (!in_array($user['role'], ['admin', 'customer'], true)) {
                     $error = 'The username/email or password you entered is incorrect.';
                 } else {
+                    activity_log_record(
+                        $conn,
+                        (int) $user['user_id'],
+                        trim((string) $user['first_name'] . ' ' . (string) $user['last_name']),
+                        (string) $user['role'],
+                        'auth.signed_in',
+                        'Signed in successfully.'
+                    );
                     session_regenerate_id(true);
                     $_SESSION['user_id'] = (int) $user['user_id'];
                     $_SESSION['first_name'] = $user['first_name'];

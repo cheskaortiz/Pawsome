@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'user-accounts';
@@ -42,7 +43,7 @@ $lockActiveAdmins = static function () use ($conn): array {
 };
 $lockAccount = static function (int $accountId) use ($conn): ?array {
     $statement = $conn->prepare(
-        'SELECT user_id, role, account_status
+        'SELECT user_id, first_name, last_name, email, username, phone, role, account_status
          FROM users
          WHERE user_id = ?
          FOR UPDATE'
@@ -107,10 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'update' && $editingAccountId === $actorId && $accountFormValues['role'] !== 'admin') {
             $pageError = 'You cannot change your own administrator role.';
         } else {
+            $transactionStarted = false;
             try {
                 if ($action === 'create') {
                     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
                     $phone = $accountFormValues['phone'] === '' ? null : $accountFormValues['phone'];
+                    $conn->begin_transaction();
+                    $transactionStarted = true;
                     $statement = $conn->prepare(
                         'INSERT INTO users (first_name, last_name, email, username, password, phone, role)
                          VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -126,11 +130,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $accountFormValues['role']
                     );
                     $statement->execute();
+                    $targetId = (int) $conn->insert_id;
                     $statement->close();
+                    activity_log_current_user(
+                        $conn,
+                        'account.created',
+                        'Created account for ' . trim($accountFormValues['first_name'] . ' ' . $accountFormValues['last_name']) . '.',
+                        [
+                            'account_id' => $targetId,
+                            'account_name' => trim($accountFormValues['first_name'] . ' ' . $accountFormValues['last_name']),
+                            'role' => $accountFormValues['role'],
+                        ]
+                    );
+                    $conn->commit();
+                    $transactionStarted = false;
                     $redirectWithNotice('The account was created.');
                 }
 
-                $transactionStarted = false;
                 try {
                     $conn->begin_transaction();
                     $transactionStarted = true;
@@ -170,6 +186,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         );
                         $statement->execute();
                         $statement->close();
+
+                        $changedFields = [];
+                        foreach (['first_name', 'last_name', 'email', 'username'] as $field) {
+                            if ((string) $target[$field] !== (string) $accountFormValues[$field]) {
+                                $changedFields[] = $field;
+                            }
+                        }
+                        if ((string) ($target['phone'] ?? '') !== (string) ($phone ?? '')) {
+                            $changedFields[] = 'phone';
+                        }
+                        if ($roleChanged) {
+                            $changedFields[] = 'role';
+                        }
+                        if ($changedFields !== []) {
+                            $targetName = trim((string) $accountFormValues['first_name'] . ' ' . (string) $accountFormValues['last_name']);
+                            $actionType = $roleChanged ? 'account.role_changed' : 'account.updated';
+                            $description = $roleChanged
+                                ? 'Changed the role for account #' . $editingAccountId . ' from ' . $target['role'] . ' to ' . $accountFormValues['role'] . '.'
+                                : 'Updated account details for ' . $targetName . '.';
+                            $activityDetails = [
+                                'account_id' => (int) $editingAccountId,
+                                'account_name' => $targetName,
+                                'changed_fields' => $changedFields,
+                            ];
+                            if ($roleChanged) {
+                                $activityDetails['from_role'] = (string) $target['role'];
+                                $activityDetails['to_role'] = $accountFormValues['role'];
+                            }
+                            activity_log_current_user($conn, $actionType, $description, $activityDetails);
+                        }
                     }
 
                     if ($pageError !== '') {
@@ -183,10 +229,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } catch (mysqli_sql_exception $exception) {
                     if ($transactionStarted) {
                         $conn->rollback();
+                        $transactionStarted = false;
                     }
                     throw $exception;
                 }
             } catch (mysqli_sql_exception $exception) {
+                if ($transactionStarted) {
+                    $conn->rollback();
+                }
                 if ((int) $exception->getCode() === 1062) {
                     $pageError = 'An account already uses that email address or username.';
                 } else {
@@ -228,6 +278,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $statement->bind_param('si', $targetStatus, $targetId);
                     $statement->execute();
                     $statement->close();
+                    if ($target['account_status'] !== $targetStatus) {
+                        $targetName = trim((string) $target['first_name'] . ' ' . (string) $target['last_name']);
+                        activity_log_current_user(
+                            $conn,
+                            'account.status_changed',
+                            'Changed account status for ' . $targetName . ' from ' . $target['account_status'] . ' to ' . $targetStatus . '.',
+                            [
+                                'account_id' => (int) $targetId,
+                                'account_name' => $targetName,
+                                'role' => (string) $target['role'],
+                                'from_status' => (string) $target['account_status'],
+                                'to_status' => $targetStatus,
+                            ]
+                        );
+                    }
                 }
 
                 if ($pageError !== '') {
@@ -263,23 +328,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($password !== $passwordConfirmation) {
             $pageError = 'The password and confirmation do not match.';
         } else {
+            $transactionStarted = false;
             try {
-                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-                $statement = $conn->prepare(
-                    'UPDATE users
-                     SET password = ?, auth_version = auth_version + 1
-                     WHERE user_id = ?'
-                );
-                $statement->bind_param('si', $passwordHash, $resetAccountId);
-                $statement->execute();
-                $updated = $statement->affected_rows;
-                $statement->close();
-                if ($updated < 1) {
-                    $pageError = 'That account could not be found or the password was unchanged.';
+                $conn->begin_transaction();
+                $transactionStarted = true;
+                $target = $lockAccount($resetAccountId);
+                if ($target === null) {
+                    $conn->rollback();
+                    $transactionStarted = false;
+                    $pageError = 'That account could not be found.';
                 } else {
-                    $redirectWithNotice('The password was reset. Existing sessions for that account must sign in again.');
+                    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                    $statement = $conn->prepare(
+                        'UPDATE users
+                         SET password = ?, auth_version = auth_version + 1
+                         WHERE user_id = ?'
+                    );
+                    $statement->bind_param('si', $passwordHash, $resetAccountId);
+                    $statement->execute();
+                    $updated = $statement->affected_rows;
+                    $statement->close();
+                    if ($updated < 1) {
+                        $conn->rollback();
+                        $transactionStarted = false;
+                        $pageError = 'That account could not be found or the password was unchanged.';
+                    } else {
+                        $targetName = trim((string) $target['first_name'] . ' ' . (string) $target['last_name']);
+                        activity_log_current_user(
+                            $conn,
+                            'account.password_reset',
+                            'Reset the password for ' . $targetName . '.',
+                            [
+                                'account_id' => (int) $resetAccountId,
+                                'account_name' => $targetName,
+                                'role' => (string) $target['role'],
+                            ]
+                        );
+                        $conn->commit();
+                        $transactionStarted = false;
+                        $redirectWithNotice('The password was reset. Existing sessions for that account must sign in again.');
+                    }
                 }
             } catch (mysqli_sql_exception $exception) {
+                if ($transactionStarted) {
+                    $conn->rollback();
+                }
                 error_log('Pawsome admin account password reset failed: ' . $exception->getMessage());
                 $pageError = 'We could not reset the password right now. Please try again.';
             }

@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/customer_booking.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $pageTitle = 'Review Your Booking';
 $activeCustomerPage = 'appointments';
@@ -208,6 +209,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $insert->execute();
                         $appointmentId = (int) $conn->insert_id;
                         $insert->close();
+                        activity_log_current_user(
+                            $conn,
+                            'appointment.booked',
+                            'Booked appointment #' . $appointmentId . '.',
+                            [
+                                'appointment_id' => $appointmentId,
+                                'pet_id' => $petId,
+                                'service_id' => $serviceId,
+                                'appointment_date' => $bookingDate,
+                                'appointment_time' => $appointmentTime,
+                                'status' => 'Pending',
+                            ]
+                        );
                         $conn->commit();
                         $transactionStarted = false;
                         $bookingCreated = true;

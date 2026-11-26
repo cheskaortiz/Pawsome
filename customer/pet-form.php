@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/pet_uploads.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $customerId = (int) $_SESSION['user_id'];
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
@@ -155,6 +156,7 @@ if ($isPost) {
         }
 
         try {
+            $conn->begin_transaction();
             if ($isEditing) {
                 $statement = $conn->prepare(
                     'UPDATE pets
@@ -181,6 +183,7 @@ if ($isPost) {
                 );
                 $statement->execute();
                 $statement->close();
+                $activityPetId = (int) $petId;
                 $successMessage = 'Pet details updated successfully.';
             } else {
                 $statement = $conn->prepare(
@@ -205,9 +208,22 @@ if ($isPost) {
                     $proofPath
                 );
                 $statement->execute();
+                $activityPetId = (int) $conn->insert_id;
                 $statement->close();
                 $successMessage = 'Pet profile added successfully.';
             }
+
+            activity_log_current_user(
+                $conn,
+                $isEditing ? 'pet.updated' : 'pet.created',
+                ($isEditing ? 'Updated' : 'Created') . ' pet profile for ' . $formValues['pet_name'] . '.',
+                [
+                    'pet_id' => $activityPetId,
+                    'pet_name' => $formValues['pet_name'],
+                    'species' => $formValues['species'],
+                ]
+            );
+            $conn->commit();
 
             if ($isEditing) {
                 if ($photoUpload['path'] !== null && !pet_remove_uploaded_file($existingPet['photo_path'])) {
@@ -222,6 +238,7 @@ if ($isPost) {
             header('Location: pets.php', true, 303);
             exit;
         } catch (mysqli_sql_exception $exception) {
+            $conn->rollback();
             foreach ($storedUploads as $filename) {
                 if (!pet_remove_uploaded_file($filename)) {
                     error_log('Pawsome could not remove a pet upload after a database error.');

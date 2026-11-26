@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 auth_redirect_logged_in();
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $error = '';
 $firstName = '';
@@ -61,19 +62,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                $transactionStarted = false;
+                $conn->begin_transaction();
+                $transactionStarted = true;
                 $insert = $conn->prepare(
                     "INSERT INTO users (first_name, last_name, email, username, password, phone, role)
                      VALUES (?, ?, ?, ?, ?, ?, 'customer')"
                 );
                 $insert->bind_param('ssssss', $firstName, $lastName, $email, $username, $passwordHash, $phone);
                 $insert->execute();
+                $userId = (int) $conn->insert_id;
                 $insert->close();
+                activity_log_record(
+                    $conn,
+                    $userId,
+                    trim($firstName . ' ' . $lastName),
+                    'customer',
+                    'account.registered',
+                    'Customer account registered.',
+                    ['registration_method' => 'public']
+                );
+                $conn->commit();
+                $transactionStarted = false;
 
                 auth_set_flash('success', 'Your account is ready. Log in to continue.');
                 header('Location: login.php', true, 303);
                 exit;
             }
         } catch (mysqli_sql_exception $exception) {
+            if (!empty($transactionStarted)) {
+                $conn->rollback();
+            }
             if ((int) $exception->getCode() === 1062) {
                 $error = 'That email address or username is already registered.';
             } else {

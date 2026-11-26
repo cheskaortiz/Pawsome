@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'reviews';
@@ -118,6 +119,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->bind_param('i', $reviewId);
             $statement->execute();
             $statement->close();
+            activity_log_current_user(
+                $conn,
+                'review.approved',
+                'Approved review #' . $reviewId . '.',
+                ['review_id' => (int) $reviewId, 'from_status' => 'Pending', 'to_status' => 'Approved']
+            );
             $conn->commit();
             $transactionStarted = false;
             auth_set_flash('admin_reviews_success', 'Review approved.');
@@ -131,6 +138,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->bind_param('si', $previousStatus, $reviewId);
             $statement->execute();
             $statement->close();
+            activity_log_current_user(
+                $conn,
+                'review.removed',
+                'Removed review #' . $reviewId . '.',
+                ['review_id' => (int) $reviewId, 'from_status' => $previousStatus, 'to_status' => 'Removed']
+            );
             $conn->commit();
             $transactionStarted = false;
             auth_set_flash('admin_reviews_success', 'Review removed.');
@@ -147,6 +160,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->bind_param('sii', $restoredStatus, $isHidden, $reviewId);
             $statement->execute();
             $statement->close();
+            activity_log_current_user(
+                $conn,
+                'review.restored',
+                'Restored review #' . $reviewId . '.',
+                ['review_id' => (int) $reviewId, 'from_status' => 'Removed', 'to_status' => $restoredStatus]
+            );
             $conn->commit();
             $transactionStarted = false;
             auth_set_flash('admin_reviews_success', 'Review restored.');

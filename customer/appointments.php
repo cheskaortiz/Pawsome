@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/appointment_price.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $pageTitle = 'Appointments';
 $activeCustomerPage = 'appointments';
@@ -25,7 +26,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit('A valid appointment is required.');
     }
 
+    $transactionStarted = false;
     try {
+        $conn->begin_transaction();
+        $transactionStarted = true;
+        $beforeStatement = $conn->prepare(
+            'SELECT status
+             FROM appointments
+             WHERE appointment_id = ? AND user_id = ?
+             FOR UPDATE'
+        );
+        $beforeStatement->bind_param('ii', $appointmentId, $customerId);
+        $beforeStatement->execute();
+        $appointmentBefore = $beforeStatement->get_result()->fetch_assoc();
+        $beforeStatement->close();
+
         $statement = $conn->prepare(
             "UPDATE appointments AS a
              SET a.status = 'Cancelled'
@@ -44,11 +59,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statement->close();
 
         if ($cancelled) {
+            $previousStatus = (string) $appointmentBefore['status'];
+            activity_log_current_user(
+                $conn,
+                'appointment.status_changed',
+                'Cancelled appointment #' . $appointmentId . '.',
+                [
+                    'appointment_id' => (int) $appointmentId,
+                    'from_status' => $previousStatus,
+                    'to_status' => 'Cancelled',
+                ]
+            );
+            $conn->commit();
+            $transactionStarted = false;
             auth_set_flash('appointment_success', 'Your appointment has been cancelled.');
         } else {
+            $conn->rollback();
+            $transactionStarted = false;
             auth_set_flash('appointment_error', 'This appointment can no longer be cancelled.');
         }
     } catch (mysqli_sql_exception $exception) {
+        if ($transactionStarted) {
+            $conn->rollback();
+        }
         error_log('Pawsome customer appointment cancellation failed: ' . $exception->getMessage());
         auth_set_flash('appointment_error', 'We could not cancel this appointment right now. Please try again.');
     }

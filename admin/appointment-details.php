@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/appointment_price.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $activeAdminPage = 'appointments';
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
@@ -91,7 +92,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ? null
             : (strlen($postedPickupTime) === 5 ? $postedPickupTime . ':00' : $postedPickupTime);
         $adminNotesValue = $postedAdminNotes === '' ? null : $postedAdminNotes;
+        $transactionStarted = false;
         try {
+            $conn->begin_transaction();
+            $transactionStarted = true;
+            $beforeStatement = $conn->prepare(
+                'SELECT pickup_date, pickup_time, admin_notes
+                 FROM appointments
+                 WHERE appointment_id = ?
+                 FOR UPDATE'
+            );
+            $beforeStatement->bind_param('i', $appointmentId);
+            $beforeStatement->execute();
+            $appointmentBefore = $beforeStatement->get_result()->fetch_assoc();
+            $beforeStatement->close();
+            if (!$appointmentBefore) {
+                $conn->rollback();
+                $transactionStarted = false;
+                http_response_code(404);
+                exit('Appointment not found.');
+            }
+
+            $changedFields = [];
+            foreach ([
+                'pickup_date' => $pickupDateValue,
+                'pickup_time' => $pickupTimeValue,
+                'admin_notes' => $adminNotesValue,
+            ] as $field => $newValue) {
+                if ($appointmentBefore[$field] !== $newValue) {
+                    $changedFields[] = $field;
+                }
+            }
             $statement = $conn->prepare(
                 'UPDATE appointments
                  SET pickup_date = ?, pickup_time = ?, admin_notes = ?
@@ -99,28 +130,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $statement->bind_param('sssi', $pickupDateValue, $pickupTimeValue, $adminNotesValue, $appointmentId);
             $statement->execute();
-            $appointmentExists = $statement->affected_rows === 1;
+            $appointmentChanged = $statement->affected_rows === 1;
             $statement->close();
-            if (!$appointmentExists) {
-                $statement = $conn->prepare(
-                    'SELECT 1
-                     FROM appointments
-                     WHERE appointment_id = ?
-                     LIMIT 1'
+            if ($appointmentChanged && $changedFields !== []) {
+                activity_log_current_user(
+                    $conn,
+                    'appointment.details_updated',
+                    'Updated appointment details for appointment #' . $appointmentId . '.',
+                    [
+                        'appointment_id' => (int) $appointmentId,
+                        'changed_fields' => $changedFields,
+                    ]
                 );
-                $statement->bind_param('i', $appointmentId);
-                $statement->execute();
-                $appointmentExists = $statement->get_result()->num_rows === 1;
-                $statement->close();
             }
-            if (!$appointmentExists) {
-                http_response_code(404);
-                exit('Appointment not found.');
-            }
+            $conn->commit();
+            $transactionStarted = false;
             auth_set_flash('appointments_success', 'Pickup schedule and admin notes saved.');
             header('Location: ' . $detailsUrl, true, 303);
             exit;
         } catch (mysqli_sql_exception $exception) {
+            if ($transactionStarted) {
+                $conn->rollback();
+            }
             error_log('Pawsome admin appointment details update failed: ' . $exception->getMessage());
             auth_set_flash('appointments_error', 'We could not save these appointment details right now. Please try again.');
             header('Location: ' . $detailsUrl, true, 303);

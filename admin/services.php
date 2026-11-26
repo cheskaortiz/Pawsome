@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'services';
@@ -68,24 +69,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sendJson(['error' => 'Choose a valid service and availability.'], 400);
         }
 
+        $transactionStarted = false;
         try {
-            $statement = $conn->prepare('UPDATE services SET status = ? WHERE service_id = ?');
-            $statement->bind_param('si', $newStatus, $serviceId);
+            $conn->begin_transaction();
+            $transactionStarted = true;
+            $statement = $conn->prepare(
+                'SELECT service_name, status
+                 FROM services
+                 WHERE service_id = ?
+                 FOR UPDATE'
+            );
+            $statement->bind_param('i', $serviceId);
             $statement->execute();
-            $exists = $statement->affected_rows === 1;
+            $serviceBefore = $statement->get_result()->fetch_assoc();
             $statement->close();
-            if (!$exists) {
-                $statement = $conn->prepare('SELECT service_id FROM services WHERE service_id = ? LIMIT 1');
-                $statement->bind_param('i', $serviceId);
-                $statement->execute();
-                $exists = $statement->get_result()->num_rows === 1;
-                $statement->close();
-            }
-            if (!$exists) {
+            if (!$serviceBefore) {
+                $conn->rollback();
+                $transactionStarted = false;
                 $sendJson(['error' => 'That service could not be found.'], 404);
             }
+            if ($serviceBefore['status'] !== $newStatus) {
+                $statement = $conn->prepare('UPDATE services SET status = ? WHERE service_id = ?');
+                $statement->bind_param('si', $newStatus, $serviceId);
+                $statement->execute();
+                $statement->close();
+                activity_log_current_user(
+                    $conn,
+                    'service.availability_changed',
+                    'Changed availability for ' . (string) $serviceBefore['service_name'] . '.',
+                    [
+                        'service_id' => (int) $serviceId,
+                        'service_name' => (string) $serviceBefore['service_name'],
+                        'from_status' => (string) $serviceBefore['status'],
+                        'to_status' => $newStatus,
+                    ]
+                );
+            }
+            $conn->commit();
+            $transactionStarted = false;
             $sendJson(['success' => true]);
         } catch (mysqli_sql_exception $exception) {
+            if ($transactionStarted) {
+                $conn->rollback();
+            }
             error_log('Pawsome admin service availability update failed: ' . $exception->getMessage());
             $sendJson(['error' => 'We could not update service availability right now. Please try again.'], 500);
         }
@@ -130,7 +156,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $descriptionValue = $description === '' ? null : $description;
     $priceNoteValue = $priceNote === '' ? null : $priceNote;
 
+    $transactionStarted = false;
     try {
+        $conn->begin_transaction();
+        $transactionStarted = true;
         if ($serviceId === null) {
             $statement = $conn->prepare(
                 "INSERT INTO services
@@ -149,8 +178,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $duration
             );
             $statement->execute();
+            $serviceId = (int) $conn->insert_id;
             $statement->close();
+            activity_log_current_user(
+                $conn,
+                'service.created',
+                'Created service ' . $serviceName . '.',
+                [
+                    'service_id' => $serviceId,
+                    'service_name' => $serviceName,
+                    'category' => $category,
+                    'species' => $species,
+                    'pet_size' => $petSize,
+                    'price' => $price,
+                ]
+            );
         } else {
+            $check = $conn->prepare(
+                'SELECT service_name, species, pet_size, category, description, price, price_note, duration
+                 FROM services
+                 WHERE service_id = ?
+                 FOR UPDATE'
+            );
+            $check->bind_param('i', $serviceId);
+            $check->execute();
+            $serviceBefore = $check->get_result()->fetch_assoc();
+            $check->close();
+            if (!$serviceBefore) {
+                $conn->rollback();
+                $transactionStarted = false;
+                $sendJson(['error' => 'That service could not be found.'], 404);
+            }
+
             $statement = $conn->prepare(
                 'UPDATE services
                  SET species = ?, pet_size = ?, category = ?, service_name = ?,
@@ -170,22 +229,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $serviceId
             );
             $statement->execute();
-            if ($statement->affected_rows === 0) {
-                $statement->close();
-                $check = $conn->prepare('SELECT service_id FROM services WHERE service_id = ? LIMIT 1');
-                $check->bind_param('i', $serviceId);
-                $check->execute();
-                $exists = $check->get_result()->num_rows === 1;
-                $check->close();
-                if (!$exists) {
-                    $sendJson(['error' => 'That service could not be found.'], 404);
+            $serviceChanged = $statement->affected_rows > 0;
+            $statement->close();
+            if ($serviceChanged) {
+                $priceChanged = (string) ($serviceBefore['price'] ?? '') !== (string) ($price ?? '');
+                $activityType = $priceChanged ? 'service.price_changed' : 'service.updated';
+                $activityDescription = $priceChanged
+                    ? 'Changed the price for service ' . $serviceName . '.'
+                    : 'Updated service ' . $serviceName . '.';
+                $activityDetails = [
+                    'service_id' => (int) $serviceId,
+                    'service_name' => $serviceName,
+                    'category' => $category,
+                    'species' => $species,
+                    'pet_size' => $petSize,
+                    'price' => $price,
+                ];
+                if ($priceChanged) {
+                    $activityDetails['previous_price'] = $serviceBefore['price'];
+                    $activityDetails['new_price'] = $price;
                 }
-            } else {
-                $statement->close();
+                activity_log_current_user($conn, $activityType, $activityDescription, $activityDetails);
             }
         }
+        $conn->commit();
+        $transactionStarted = false;
         $sendJson(['success' => true]);
     } catch (mysqli_sql_exception $exception) {
+        if ($transactionStarted) {
+            $conn->rollback();
+        }
         error_log('Pawsome admin service save failed: ' . $exception->getMessage());
         $sendJson([
             'error' => $exception->getCode() === 1062

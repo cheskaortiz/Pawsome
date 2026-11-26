@@ -96,11 +96,14 @@
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm11 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0 1.5v5m-2.5-2.5h5"/></svg>
             User Accounts
         </a>
-        <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true">
+        <a
+            class="customer-nav-link<?= $activeAdminPage === 'activity-log' ? ' is-active' : '' ?>"
+            href="activity-log.php"
+            <?= $activeAdminPage === 'activity-log' ? 'aria-current="page"' : '' ?>
+        >
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
             Activity Log
-            <span class="admin-nav-coming-soon">Coming Soon</span>
-        </span>
+        </a>
         <span class="customer-nav-link admin-nav-placeholder admin-profile-link" aria-disabled="true">
             <svg class="admin-profile-avatar" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="currentColor"/><circle cx="16" cy="12" r="5" fill="#fffdf8"/><path d="M6.5 27c1-5.1 4.5-8 9.5-8s8.5 2.9 9.5 8" fill="#fffdf8"/></svg>
             Admin Profile

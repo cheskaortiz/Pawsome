@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/appointment_price.php';
+require_once __DIR__ . '/../includes/activity_log.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'appointments';
@@ -114,7 +115,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $transition = $actionTransitions[$action];
     $returnToDetails = auth_post_string('return_to') === 'details';
     $detailsReturnUrl = auth_post_string('return_url');
+    $transactionStarted = false;
     try {
+        $conn->begin_transaction();
+        $transactionStarted = true;
+        $statusStatement = $conn->prepare(
+            'SELECT status
+             FROM appointments
+             WHERE appointment_id = ?
+             FOR UPDATE'
+        );
+        $statusStatement->bind_param('i', $appointmentId);
+        $statusStatement->execute();
+        $appointmentBefore = $statusStatement->get_result()->fetch_assoc();
+        $statusStatement->close();
+
         $allowedStatuses = $transition['from'];
         $statusPlaceholders = implode(', ', array_fill(0, count($allowedStatuses), '?'));
         $groomingRecordGuard = !empty($transition['requires_no_grooming_record'])
@@ -138,13 +153,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bindArguments[] = &$parameters[$parameterIndex];
         }
         call_user_func_array([$statement, 'bind_param'], $bindArguments);
-        $statement->execute();
-        $updated = $statement->affected_rows === 1;
+        if ($appointmentBefore) {
+            $statement->execute();
+            $updated = $statement->affected_rows === 1;
+        } else {
+            $updated = false;
+        }
         $statement->close();
 
         if ($updated) {
+            $previousStatus = (string) $appointmentBefore['status'];
+            activity_log_current_user(
+                $conn,
+                'appointment.status_changed',
+                'Appointment #' . $appointmentId . ' status changed from ' . $previousStatus . ' to ' . $transition['target'] . '.',
+                [
+                    'appointment_id' => (int) $appointmentId,
+                    'from_status' => $previousStatus,
+                    'to_status' => $transition['target'],
+                ]
+            );
+            $conn->commit();
+            $transactionStarted = false;
             auth_set_flash('appointments_success', 'Appointment status updated to ' . $transition['target'] . '.');
         } else {
+            $conn->rollback();
+            $transactionStarted = false;
             $statement = $conn->prepare(
                 'SELECT a.status, EXISTS (
                             SELECT 1
@@ -174,6 +208,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             auth_set_flash('appointments_error', $message);
         }
     } catch (mysqli_sql_exception $exception) {
+        if ($transactionStarted) {
+            $conn->rollback();
+        }
         error_log('Pawsome admin appointment status update failed: ' . $exception->getMessage());
         auth_set_flash('appointments_error', 'We could not update this appointment right now. Please try again.');
     }
