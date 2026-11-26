@@ -4,6 +4,7 @@ auth_require_admin();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/appointment_price.php';
 require_once __DIR__ . '/../includes/activity_log.php';
+require_once __DIR__ . '/../includes/admin_notifications.php';
 
 $adminFirstName = (string) ($_SESSION['first_name'] ?? 'admin');
 $activeAdminPage = 'appointments';
@@ -172,6 +173,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'from_status' => $previousStatus,
                     'to_status' => $transition['target'],
                 ]
+            );
+            $notificationType = $transition['target'] === 'Cancelled'
+                ? 'appointment.cancelled'
+                : 'appointment.status_changed';
+            $notificationTitle = $transition['target'] === 'Cancelled'
+                ? 'Appointment cancelled'
+                : 'Appointment status updated';
+            admin_notification_broadcast(
+                $conn,
+                $notificationType,
+                $notificationTitle,
+                'Appointment #' . $appointmentId . ' status changed from '
+                    . $previousStatus . ' to ' . $transition['target'] . '.',
+                'appointment-details.php?id=' . $appointmentId
             );
             $conn->commit();
             $transactionStarted = false;

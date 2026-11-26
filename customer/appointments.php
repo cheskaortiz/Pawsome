@@ -4,6 +4,7 @@ auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/appointment_price.php';
 require_once __DIR__ . '/../includes/activity_log.php';
+require_once __DIR__ . '/../includes/admin_notifications.php';
 
 $pageTitle = 'Appointments';
 $activeCustomerPage = 'appointments';
@@ -69,6 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'from_status' => $previousStatus,
                     'to_status' => 'Cancelled',
                 ]
+            );
+            admin_notification_broadcast(
+                $conn,
+                'appointment.cancelled',
+                'Appointment cancelled',
+                'Appointment #' . $appointmentId . ' was cancelled by a customer.',
+                'appointment-details.php?id=' . $appointmentId
             );
             $conn->commit();
             $transactionStarted = false;

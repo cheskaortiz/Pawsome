@@ -4,6 +4,7 @@ auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/customer_booking.php';
 require_once __DIR__ . '/../includes/activity_log.php';
+require_once __DIR__ . '/../includes/admin_notifications.php';
 
 $pageTitle = 'Review Your Booking';
 $activeCustomerPage = 'appointments';
@@ -221,6 +222,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'appointment_time' => $appointmentTime,
                                 'status' => 'Pending',
                             ]
+                        );
+                        admin_notification_broadcast(
+                            $conn,
+                            'appointment.booked',
+                            'New appointment booking',
+                            'Appointment #' . $appointmentId . ' is waiting for confirmation.',
+                            'appointment-details.php?id=' . $appointmentId
                         );
                         $conn->commit();
                         $transactionStarted = false;

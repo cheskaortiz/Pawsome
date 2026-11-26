@@ -104,16 +104,17 @@
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
             Activity Log
         </a>
-        <span class="customer-nav-link admin-nav-placeholder admin-profile-link" aria-disabled="true">
-            <svg class="admin-profile-avatar" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="currentColor"/><circle cx="16" cy="12" r="5" fill="#fffdf8"/><path d="M6.5 27c1-5.1 4.5-8 9.5-8s8.5 2.9 9.5 8" fill="#fffdf8"/></svg>
-            Admin Profile
-            <span class="admin-nav-coming-soon">Coming Soon</span>
-        </span>
-        <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true">
-            <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8 3.5-.1-1.5 1.4-1.1-1.5-2.6-1.7.6a7.7 7.7 0 0 0-1.3-.8L16.5 4h-3l-.3 1.8a7.7 7.7 0 0 0-1.4.8l-1.6-.6-1.5 2.6 1.4 1.1a7.7 7.7 0 0 0 0 1.6l-1.4 1.1 1.5 2.6 1.6-.6a7.7 7.7 0 0 0 1.4.8l.3 1.8h3l.3-1.8a7.7 7.7 0 0 0 1.3-.8l1.7.6 1.5-2.6-1.4-1.1L20 12Z"/></svg>
-            Settings
-            <span class="admin-nav-coming-soon">Coming Soon</span>
-        </span>
+        <div class="admin-profile-settings-menu">
+            <button class="customer-nav-link admin-profile-settings-toggle" type="button" aria-expanded="false" aria-controls="admin-profile-settings-submenu">
+                <svg class="admin-profile-avatar" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="currentColor"/><circle cx="16" cy="12" r="5" fill="#fffdf8"/><path d="M6.5 27c1-5.1 4.5-8 9.5-8s8.5 2.9 9.5 8" fill="#fffdf8"/></svg>
+                Profile &amp; Settings
+                <svg class="admin-profile-settings-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+            </button>
+            <div class="admin-profile-settings-submenu" id="admin-profile-settings-submenu" hidden>
+                <button class="customer-nav-link" type="button" data-admin-dialog-open="profile">Admin Profile</button>
+                <button class="customer-nav-link" type="button" data-admin-dialog-open="settings">Settings</button>
+            </div>
+        </div>
         <form class="admin-sidebar-logout-form" method="post" action="../customer/logout.php">
             <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
             <button class="customer-nav-link admin-sidebar-logout" type="submit">
@@ -123,3 +124,96 @@
         </form>
     </nav>
 </aside>
+
+<div class="admin-notification-widget" data-admin-notifications data-admin-id="<?= (int) $_SESSION['user_id'] ?>" data-api="notifications.php" data-csrf="<?= auth_escape(auth_csrf_token()) ?>">
+    <button class="admin-notification-bell" type="button" aria-label="Notifications" aria-expanded="false" aria-controls="admin-notification-panel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12a2 2 0 0 0 4 0"/></svg>
+        <span class="admin-notification-count" data-notification-count hidden></span>
+    </button>
+    <section class="admin-notification-panel" id="admin-notification-panel" aria-label="Recent notifications" hidden>
+        <header class="admin-notification-heading">
+            <h2>Notifications</h2>
+            <button class="admin-notification-close" type="button" aria-label="Close notifications">&times;</button>
+        </header>
+        <p class="admin-notification-status" data-notification-status role="status" aria-live="polite"></p>
+        <ul class="admin-notification-list" data-notification-list></ul>
+    </section>
+</div>
+
+<dialog class="admin-preferences-dialog" id="admin-profile-dialog" aria-labelledby="admin-profile-dialog-title">
+    <form class="admin-preferences-form" id="admin-profile-form">
+        <header class="admin-preferences-heading">
+            <div>
+                <span class="eyebrow">Admin account</span>
+                <h2 id="admin-profile-dialog-title">Admin Profile</h2>
+                <p>Update your profile information.</p>
+            </div>
+            <button class="admin-preferences-close" type="button" data-admin-dialog-close aria-label="Close profile dialog">&times;</button>
+        </header>
+        <p class="admin-preferences-message" data-profile-message role="status" aria-live="polite"></p>
+        <div class="admin-preferences-fields">
+            <label>
+                <span>First name</span>
+                <input name="first_name" type="text" maxlength="100" autocomplete="given-name" required>
+            </label>
+            <label>
+                <span>Last name</span>
+                <input name="last_name" type="text" maxlength="100" autocomplete="family-name" required>
+            </label>
+            <label>
+                <span>Email address</span>
+                <input name="email" type="email" maxlength="150" autocomplete="email" required>
+            </label>
+            <label>
+                <span>Username</span>
+                <input name="username" type="text" maxlength="50" autocomplete="username" required>
+            </label>
+            <label>
+                <span>Phone number</span>
+                <input name="phone" type="tel" maxlength="20" autocomplete="tel">
+            </label>
+        </div>
+        <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
+        <footer class="admin-preferences-actions">
+            <button class="admin-preferences-secondary" type="button" data-admin-dialog-close>Cancel</button>
+            <button class="button button-primary" type="submit">Save changes</button>
+        </footer>
+    </form>
+</dialog>
+
+<dialog class="admin-preferences-dialog" id="admin-settings-dialog" aria-labelledby="admin-settings-dialog-title">
+    <form class="admin-preferences-form" id="admin-settings-form">
+        <header class="admin-preferences-heading">
+            <div>
+                <span class="eyebrow">Personalize your dashboard</span>
+                <h2 id="admin-settings-dialog-title">Settings</h2>
+            </div>
+            <button class="admin-preferences-close" type="button" data-admin-dialog-close aria-label="Close settings dialog">&times;</button>
+        </header>
+        <div class="admin-preferences-fields">
+            <label>
+                <span>Appearance</span>
+                <select name="appearance" data-preference="appearance">
+                    <option value="light">Light Mode</option>
+                    <option value="dark">Dark Mode</option>
+                </select>
+            </label>
+            <label>
+                <span>Accent Color</span>
+                <input name="accent_color" type="color" value="#79add0" data-preference="accentColor">
+            </label>
+            <label class="admin-preference-switch">
+                <span>Notifications</span>
+                <input name="notifications" type="checkbox" data-preference="notifications">
+                <span class="admin-preference-switch-track" aria-hidden="true"></span>
+            </label>
+        </div>
+        <p class="admin-preferences-message" data-settings-message role="status" aria-live="polite"></p>
+        <footer class="admin-preferences-actions">
+            <button class="admin-preferences-secondary" type="button" data-restore-defaults>Restore Defaults</button>
+            <button class="button button-primary" type="button" data-admin-dialog-close>Done</button>
+        </footer>
+    </form>
+</dialog>
+
+<script src="../assets/js/admin/admin-dashboard.js" defer></script>

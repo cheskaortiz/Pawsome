@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/auth.php';
 auth_require_customer();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/activity_log.php';
+require_once __DIR__ . '/../includes/admin_notifications.php';
 
 $pageTitle = 'My Reviews';
 $activeCustomerPage = 'reviews';
@@ -228,6 +229,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'rating' => $rating,
                             'status' => 'Pending',
                         ]
+                    );
+                    admin_notification_broadcast(
+                        $conn,
+                        'review.submitted',
+                        'New customer review',
+                        'A customer submitted a review for appointment #' . $appointmentId . '.',
+                        'reviews.php'
                     );
                     $conn->commit();
                     header('Location: reviews.php?saved=1', true, 303);
