@@ -115,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $transition = $actionTransitions[$action];
     $returnToDetails = auth_post_string('return_to') === 'details';
+    $returnToDashboard = auth_post_string('return_to') === 'dashboard';
     $detailsReturnUrl = auth_post_string('return_url');
     $transactionStarted = false;
     try {
@@ -230,10 +231,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         auth_set_flash('appointments_error', 'We could not update this appointment right now. Please try again.');
     }
 
-    $redirectUrl = $returnToDetails
-        ? 'appointment-details.php?id=' . (int) $appointmentId
-            . ($detailsReturnUrl !== '' ? '&return=' . rawurlencode($detailsReturnUrl) : '')
-        : $returnUrl;
+    if ($returnToDashboard) {
+        $redirectUrl = 'dashboard.php';
+    } elseif ($returnToDetails) {
+        $redirectUrl = 'appointment-details.php?id=' . (int) $appointmentId
+            . ($detailsReturnUrl !== '' ? '&return=' . rawurlencode($detailsReturnUrl) : '');
+    } else {
+        $redirectUrl = $returnUrl;
+    }
     header('Location: ' . $redirectUrl, true, 303);
     exit;
 }

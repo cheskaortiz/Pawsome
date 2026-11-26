@@ -6,7 +6,7 @@
     const preferenceKey = `pawsome.admin.preferences.${adminPreferenceKey}`;
     const defaultPreferences = {
         appearance: 'light',
-        accentColor: '#79add0',
+        accentColor: '#2b55c9',
         notifications: true,
     };
     const profileDialog = document.getElementById('admin-profile-dialog');
@@ -22,6 +22,9 @@
     const notificationList = notificationWidget && notificationWidget.querySelector('[data-notification-list]');
     const notificationStatus = notificationWidget && notificationWidget.querySelector('[data-notification-status]');
     const notificationCount = notificationWidget && notificationWidget.querySelector('[data-notification-count]');
+    const themeToggleButton = document.querySelector('[data-admin-theme-toggle]');
+    const moonThemeIcon = themeToggleButton && themeToggleButton.querySelector('[data-theme-icon="moon"]');
+    const sunThemeIcon = themeToggleButton && themeToggleButton.querySelector('[data-theme-icon="sun"]');
     let preferences = readPreferences();
 
     function normalizePreferences(value) {
@@ -29,11 +32,14 @@
             return { ...defaultPreferences };
         }
 
+        const storedAccent = typeof value.accentColor === 'string' && /^#[0-9a-f]{6}$/i.test(value.accentColor)
+            ? value.accentColor.toLowerCase()
+            : defaultPreferences.accentColor;
         return {
             appearance: value.appearance === 'dark' ? 'dark' : 'light',
-            accentColor: typeof value.accentColor === 'string' && /^#[0-9a-f]{6}$/i.test(value.accentColor)
-                ? value.accentColor.toLowerCase()
-                : defaultPreferences.accentColor,
+            accentColor: storedAccent === '#79add0' || storedAccent === '#f77700'
+                ? defaultPreferences.accentColor
+                : storedAccent,
             notifications: value.notifications !== false,
         };
     }
@@ -79,21 +85,23 @@
         }
         const isDefaultAccent = color === defaultPreferences.accentColor;
         const textColor = isDefaultAccent
-            ? '#30363c'
+            ? '#ffffff'
             : relativeLuminance(color) > 0.179 ? '#000000' : '#ffffff';
-
-        root.style.setProperty('--blue', color);
-        root.style.setProperty('--blue-medium', isDefaultAccent ? '#a9cce5' : mixColors(color, '#ffffff', 0.48));
-        root.style.setProperty('--blue-light', isDefaultAccent ? '#c9e2f5' : mixColors(color, '#ffffff', 0.8));
-        root.style.setProperty('--blue-deep', isDefaultAccent ? '#527d9b' : readableDeep);
-        root.style.setProperty(
-            '--blue-deep-hover',
-            isDefaultAccent ? '#4c7590' : mixColors(readableDeep, '#000000', 0.12)
-        );
+        const palette = {
+            '--blue': color,
+            '--blue-medium': isDefaultAccent ? '#7392e5' : mixColors(color, '#ffffff', 0.48),
+            '--blue-light': isDefaultAccent ? '#dce7ff' : mixColors(color, '#ffffff', 0.8),
+            '--blue-deep': isDefaultAccent ? '#2346a8' : readableDeep,
+            '--blue-deep-hover': isDefaultAccent ? '#1e3e99' : mixColors(readableDeep, '#000000', 0.12),
+            '--ink-on-blue': textColor,
+        };
+        Object.entries(palette).forEach(([name, value]) => {
+            root.style.setProperty(name, value);
+            document.body.style.setProperty(name, value);
+        });
         if (isDefaultAccent) {
-            readableDeep = '#527d9b';
+            readableDeep = '#2346a8';
         }
-        root.style.setProperty('--ink-on-blue', textColor);
         root.style.setProperty('--admin-accent-rgb', rgb.join(', '));
         root.style.setProperty('--admin-accent-soft', `rgba(${rgb.join(', ')}, .18)`);
         return { readableDeep, readableLight };
@@ -106,6 +114,22 @@
         settingsForm.elements.appearance.value = preferences.appearance;
         settingsForm.elements.accent_color.value = preferences.accentColor;
         settingsForm.elements.notifications.checked = preferences.notifications;
+    }
+
+    function updateThemeToggle() {
+        if (!themeToggleButton) {
+            return;
+        }
+        const isDarkMode = preferences.appearance === 'dark';
+        const label = isDarkMode ? 'Switch to light mode' : 'Switch to dark mode';
+        themeToggleButton.setAttribute('aria-label', label);
+        themeToggleButton.title = label;
+        if (moonThemeIcon) {
+            moonThemeIcon.hidden = isDarkMode;
+        }
+        if (sunThemeIcon) {
+            sunThemeIcon.hidden = !isDarkMode;
+        }
     }
 
     function applyPreferences() {
@@ -121,6 +145,7 @@
             `rgba(${rgbChannels(preferences.accentColor).join(', ')}, .18)`
         );
         updatePreferenceControls();
+        updateThemeToggle();
         if (notificationCount) {
             notificationCount.hidden = !preferences.notifications
                 || notificationCount.textContent === ''
@@ -228,6 +253,13 @@
             const greeting = document.querySelector('.admin-topbar-greeting');
             if (greeting) {
                 greeting.textContent = `Hello, ${profileForm.elements.first_name.value}`;
+            }
+            const profileName = document.querySelector('.admin-profile-chip-name');
+            if (profileName) {
+                profileName.textContent = [
+                    profileForm.elements.first_name.value,
+                    profileForm.elements.last_name.value,
+                ].filter(Boolean).join(' ');
             }
             profileMessage.textContent = result.message || 'Your profile was saved.';
         } catch (error) {
@@ -382,6 +414,13 @@
     }
 
     applyPreferences();
+
+    if (themeToggleButton) {
+        themeToggleButton.addEventListener('click', () => {
+            preferences.appearance = preferences.appearance === 'dark' ? 'light' : 'dark';
+            savePreferences();
+        });
+    }
 
     if (submenuToggle && submenu) {
         submenuToggle.addEventListener('click', () => {
