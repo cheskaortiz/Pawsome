@@ -49,6 +49,55 @@ function auth_require_login(): void
         header('Location: ' . PAWSOME_BASE_PATH . '/customer/login.php', true, 303);
         exit;
     }
+
+    global $conn;
+    require_once __DIR__ . '/../config/database.php';
+
+    try {
+        $userId = (int) $_SESSION['user_id'];
+        $statement = $conn->prepare(
+            'SELECT first_name, last_name, username, role, account_status, auth_version
+             FROM users
+             WHERE user_id = ?
+             LIMIT 1'
+        );
+        $statement->bind_param('i', $userId);
+        $statement->execute();
+        $user = $statement->get_result()->fetch_assoc();
+        $statement->close();
+    } catch (mysqli_sql_exception $exception) {
+        error_log('Pawsome authenticated account lookup failed: ' . $exception->getMessage());
+        http_response_code(503);
+        exit('We could not verify your account right now. Please try again later.');
+    }
+
+    if (
+        !$user
+        || $user['account_status'] !== 'Active'
+        || !in_array($user['role'], ['admin', 'customer'], true)
+        || (int) ($user['auth_version'] ?? 0) !== (int) ($_SESSION['auth_version'] ?? 0)
+    ) {
+        $_SESSION = [];
+        $cookie = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $cookie['path'],
+            $cookie['domain'],
+            $cookie['secure'],
+            $cookie['httponly']
+        );
+        session_destroy();
+        header('Location: ' . PAWSOME_BASE_PATH . '/customer/login.php?session_expired=1', true, 303);
+        exit;
+    }
+
+    $_SESSION['first_name'] = $user['first_name'];
+    $_SESSION['last_name'] = $user['last_name'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['role'] = $user['role'];
+    $_SESSION['auth_version'] = (int) $user['auth_version'];
 }
 
 function auth_require_customer(): void

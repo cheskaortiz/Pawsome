@@ -10,6 +10,8 @@ $success = auth_take_flash('success');
 
 if (isset($_GET['logged_out']) && $_GET['logged_out'] === '1') {
     $success = 'You have been logged out successfully.';
+} elseif (isset($_GET['session_expired']) && $_GET['session_expired'] === '1') {
+    $error = 'Your session ended because account access changed. Please sign in again.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -23,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $statement = $conn->prepare(
-                'SELECT user_id, first_name, last_name, username, password, role
+                'SELECT user_id, first_name, last_name, username, password, role, account_status, auth_version
                  FROM users
                  WHERE username = ? OR email = ?
                  LIMIT 1'
@@ -34,7 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->close();
 
             if ($user && password_verify($password, $user['password'])) {
-                if (!in_array($user['role'], ['admin', 'customer'], true)) {
+                if ($user['account_status'] !== 'Active') {
+                    $error = 'The username/email or password you entered is incorrect.';
+                } elseif (!in_array($user['role'], ['admin', 'customer'], true)) {
                     $error = 'The username/email or password you entered is incorrect.';
                 } else {
                     session_regenerate_id(true);
@@ -43,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['last_name'] = $user['last_name'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['role'] = $user['role'];
+                    $_SESSION['auth_version'] = (int) $user['auth_version'];
 
                     $destination = $user['role'] === 'admin'
                         ? '/admin/dashboard.php'

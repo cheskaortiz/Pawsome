@@ -88,11 +88,14 @@
     </nav>
 
     <nav class="customer-sidebar-bottom admin-sidebar-bottom" aria-label="Admin account navigation">
-        <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true">
+        <a
+            class="customer-nav-link<?= $activeAdminPage === 'user-accounts' ? ' is-active' : '' ?>"
+            href="user-accounts.php"
+            <?= $activeAdminPage === 'user-accounts' ? 'aria-current="page"' : '' ?>
+        >
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm11 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0 1.5v5m-2.5-2.5h5"/></svg>
             User Accounts
-            <span class="admin-nav-coming-soon">Coming Soon</span>
-        </span>
+        </a>
         <span class="customer-nav-link admin-nav-placeholder" aria-disabled="true">
             <svg class="admin-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
             Activity Log
