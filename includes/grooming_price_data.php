@@ -34,6 +34,16 @@ function grooming_group_services_by_species(array $services): array
     return $grouped;
 }
 
+function grooming_service_category_description(string $category): string
+{
+    $descriptions = [
+        'A La Carte Services (Flat Rate)' => "Individual grooming services with fixed prices, regardless of your pet's size.",
+        'A La Carte Services (Size-Dependent)' => "Individual grooming services with prices that vary depending on your pet's size.",
+    ];
+
+    return $descriptions[$category] ?? '';
+}
+
 function grooming_format_service_price(array $service): string
 {
     if ($service['price'] === null) {

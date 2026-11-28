@@ -302,6 +302,6 @@ require __DIR__ . '/../includes/customer_header.php';
 </div>
 
 <div class="booking-step-actions">
-    <a class="button pet-cancel-button" href="booking.php">← Change pet or service</a>
+    <a class="button pet-cancel-button" href="booking.php?step=2">← Change pet or service</a>
 </div>
 <?php require __DIR__ . '/../includes/customer_footer.php'; ?>

@@ -15,7 +15,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $bookingAction = auth_post_string('booking_action');
 
-        if ($bookingAction === 'select_pet') {
+        if ($bookingAction === 'rebook_appointment') {
+            $appointmentId = filter_var(
+                auth_post_string('appointment_id'),
+                FILTER_VALIDATE_INT,
+                ['options' => ['min_range' => 1]]
+            );
+            if ($appointmentId === false) {
+                auth_set_flash('appointment_error', 'A valid appointment is required to book again.');
+                header('Location: appointments.php', true, 303);
+                exit;
+            }
+
+            try {
+                $statement = $conn->prepare(
+                    "SELECT a.pet_id, a.service_id,
+                            p.species AS pet_species, p.breed_size AS pet_breed_size,
+                            s.species AS service_species, s.pet_size AS service_pet_size,
+                            s.category AS service_category, s.status AS service_status,
+                            s.duration AS service_duration
+                     FROM appointments AS a
+                     INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
+                     INNER JOIN services AS s ON s.service_id = a.service_id
+                     WHERE a.appointment_id = ?
+                       AND a.user_id = ?
+                       AND a.status IN ('Completed', 'Cancelled', 'Rejected')
+                     LIMIT 1"
+                );
+                $statement->bind_param('ii', $appointmentId, $customerId);
+                $statement->execute();
+                $appointment = $statement->get_result()->fetch_assoc();
+                $statement->close();
+            } catch (mysqli_sql_exception $exception) {
+                error_log('Pawsome appointment rebooking lookup failed: ' . $exception->getMessage());
+                auth_set_flash('appointment_error', 'We could not start a new booking right now. Please try again.');
+                header('Location: appointments.php', true, 303);
+                exit;
+            }
+
+            if (!$appointment) {
+                auth_set_flash('appointment_error', 'This appointment is not available to book again.');
+                header('Location: appointments.php', true, 303);
+                exit;
+            }
+
+            $petSpecies = (string) $appointment['pet_species'];
+            $petBreedSize = (string) ($appointment['pet_breed_size'] ?? '');
+            $petCanBook = in_array($petSpecies, ['Dog', 'Cat', 'Other'], true)
+                && ($petSpecies !== 'Dog' || in_array($petBreedSize, ['Small', 'Medium', 'Large', 'Giant'], true));
+            $serviceCanBook = $petCanBook
+                && (string) $appointment['service_species'] === $petSpecies
+                && (
+                    (string) $appointment['service_pet_size'] === 'Any'
+                    || (string) $appointment['service_pet_size'] === $petBreedSize
+                )
+                && in_array((string) $appointment['service_category'], customer_booking_service_categories(), true)
+                && (string) $appointment['service_status'] === 'Available'
+                && (int) $appointment['service_duration'] > 0;
+
+            $_SESSION['booking_pet_id'] = (int) $appointment['pet_id'];
+            unset(
+                $_SESSION['booking_service_id'],
+                $_SESSION['booking_date'],
+                $_SESSION['booking_time'],
+                $_SESSION['booking_notes'],
+                $_SESSION['booking_submission_token']
+            );
+
+            if (!$petCanBook) {
+                auth_set_flash('booking_flow_error', "Update this pet's profile before booking again.");
+                header('Location: booking.php?step=2', true, 303);
+                exit;
+            }
+
+            if (!$serviceCanBook) {
+                auth_set_flash('booking_flow_error', 'The original service is unavailable. Choose another available service.');
+                header('Location: booking.php?step=2', true, 303);
+                exit;
+            }
+
+            $_SESSION['booking_service_id'] = (int) $appointment['service_id'];
+            header('Location: booking-schedule.php', true, 303);
+            exit;
+        } elseif ($bookingAction === 'select_pet') {
             $petId = filter_var(auth_post_string('pet_id'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
             if ($petId === false) {
                 $errorMessage = 'Choose one of your pet profiles to continue.';
@@ -45,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             );
                         }
                         $_SESSION['booking_pet_id'] = $petId;
-                        header('Location: booking.php', true, 303);
+                        header('Location: booking.php?step=2', true, 303);
                         exit;
                     }
                 } catch (mysqli_sql_exception $exception) {
@@ -225,6 +307,9 @@ foreach ($services as $service) {
     }
 }
 
+$requestedStep = $_GET['step'] ?? '1';
+$bookingStep = $selectedPet !== null && is_string($requestedStep) && $requestedStep === '2' ? 2 : 1;
+
 require __DIR__ . '/../includes/customer_header.php';
 ?>
 <section class="customer-page-heading">
@@ -245,7 +330,7 @@ require __DIR__ . '/../includes/customer_header.php';
         <p>Choose one of your registered pets for their grooming visit.</p>
         <a class="button button-primary" href="pet-form.php">Add a Pet</a>
     </section>
-<?php else: ?>
+<?php elseif ($bookingStep === 1): ?>
     <section class="booking-step-section" aria-labelledby="booking-pet-title">
         <div class="customer-section-heading">
             <span class="eyebrow">Step 1</span>
@@ -297,41 +382,41 @@ require __DIR__ . '/../includes/customer_header.php';
         </form>
     </section>
 
-    <?php if ($selectedPet !== null): ?>
-        <section class="booking-step-section" aria-labelledby="booking-service-title">
-            <div class="customer-section-heading">
-                <span class="eyebrow">Step 2 · Booking for <?= auth_escape((string) $selectedPet['pet_name']) ?></span>
-                <h2 id="booking-service-title">Choose a grooming service</h2>
-            </div>
-            <?php if ($serviceLoadError): ?>
-                <p class="customer-alert" role="alert">We couldn't load available services right now. Please try again later.</p>
-            <?php elseif ($petSizeMissing): ?>
-                <p class="customer-info" role="status">
-                    Add your dog's registered breed size before choosing a service.
-                    <a href="pet-form.php?pet_id=<?= (int) $selectedPet['pet_id'] ?>">Update <?= auth_escape((string) $selectedPet['pet_name']) ?>'s profile</a>.
-                </p>
-            <?php elseif (!in_array($selectedPet['species'], ['Dog', 'Cat', 'Other'], true)): ?>
-                <p class="customer-info" role="status">
-                    Update this pet's species in their profile before booking.
-                    <a href="pet-form.php?pet_id=<?= (int) $selectedPet['pet_id'] ?>">Update pet profile</a>.
-                </p>
-            <?php else: ?>
-                <?php if (!$services): ?>
-                    <p class="customer-info" role="note">There are no grooming services with a valid duration in the database yet.</p>
+<?php else: ?>
+    <section class="booking-step-section" aria-labelledby="booking-service-title">
+        <div class="customer-section-heading">
+            <span class="eyebrow">Step 2 · Booking for <?= auth_escape((string) $selectedPet['pet_name']) ?></span>
+            <h2 id="booking-service-title">Choose a grooming service</h2>
+        </div>
+        <?php if ($serviceLoadError): ?>
+            <p class="customer-alert" role="alert">We couldn't load available services right now. Please try again later.</p>
+        <?php elseif ($petSizeMissing): ?>
+            <p class="customer-info" role="status">
+                Add your dog's registered breed size before choosing a service.
+                <a href="pet-form.php?pet_id=<?= (int) $selectedPet['pet_id'] ?>">Update <?= auth_escape((string) $selectedPet['pet_name']) ?>'s profile</a>.
+            </p>
+        <?php elseif (!in_array($selectedPet['species'], ['Dog', 'Cat', 'Other'], true)): ?>
+            <p class="customer-info" role="status">
+                Update this pet's species in their profile before booking.
+                <a href="pet-form.php?pet_id=<?= (int) $selectedPet['pet_id'] ?>">Update pet profile</a>.
+            </p>
+        <?php else: ?>
+            <?php if (!$services): ?>
+                <p class="customer-info" role="note">There are no grooming services with a valid duration in the database yet.</p>
+            <?php endif; ?>
+            <p class="booking-selection-summary" id="booking-selection-summary" role="status">
+                <?php if ($selectedService !== null): ?>
+                    Selected: <strong><?= auth_escape(customer_booking_service_label($selectedService)) ?></strong>
+                    · <?= auth_escape(grooming_format_service_price($selectedService)) ?>
+                    · <?= (int) $selectedService['duration'] ?> min
+                <?php else: ?>
+                    Select one available service to continue.
                 <?php endif; ?>
-                <p class="booking-selection-summary" id="booking-selection-summary" role="status">
-                    <?php if ($selectedService !== null): ?>
-                        Selected: <strong><?= auth_escape(customer_booking_service_label($selectedService)) ?></strong>
-                        · <?= auth_escape(grooming_format_service_price($selectedService)) ?>
-                        · <?= (int) $selectedService['duration'] ?> min
-                    <?php else: ?>
-                        Select one available service to continue.
-                    <?php endif; ?>
-                </p>
-                <form method="post" action="booking.php" id="booking-service-form">
-                    <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
-                    <input type="hidden" name="booking_action" value="select_service">
-                    <input type="hidden" name="pet_id" value="<?= (int) $selectedPet['pet_id'] ?>">
+            </p>
+            <form method="post" action="booking.php?step=2" id="booking-service-form">
+                <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
+                <input type="hidden" name="booking_action" value="select_service">
+                <input type="hidden" name="pet_id" value="<?= (int) $selectedPet['pet_id'] ?>">
                 <?php $categoryIndex = 0; foreach ($serviceCategories as $categoryName => $categoryServices): ?>
                     <?php $panelId = 'booking-category-' . $categoryIndex; ?>
                     <?php $categoryIndex++; ?>
@@ -349,6 +434,10 @@ require __DIR__ . '/../includes/customer_header.php';
                             </button>
                         </h3>
                         <div class="booking-category-panel" id="<?= auth_escape($panelId) ?>" aria-hidden="true" inert>
+                            <?php $categoryDescription = grooming_service_category_description((string) $categoryName); ?>
+                            <?php if ($categoryDescription !== ''): ?>
+                                <p class="booking-category-description"><?= auth_escape($categoryDescription) ?></p>
+                            <?php endif; ?>
                             <?php if (!$categoryServices): ?>
                                 <p class="booking-category-empty">No services are listed in this category for this pet.</p>
                             <?php else: ?>
@@ -406,20 +495,22 @@ require __DIR__ . '/../includes/customer_header.php';
                     </section>
                 <?php endforeach; ?>
 
-                <?php if ($services): ?>
-                    <div class="booking-step-actions">
-                        <button class="button button-primary" id="booking-service-submit" type="submit"<?= $selectedService === null ? ' disabled' : '' ?>>
-                            Continue to scheduling <span aria-hidden="true">→</span>
-                        </button>
-                    </div>
-                <?php endif; ?>
-                </form>
+            </form>
+        <?php endif; ?>
+        <div class="booking-step-actions">
+            <a class="button pet-cancel-button" href="booking.php?step=1">← Back to pet selection</a>
+            <?php if ($services): ?>
+                <button class="button button-primary" id="booking-service-submit" type="submit" form="booking-service-form"<?= $selectedService === null ? ' disabled' : '' ?>>
+                    Continue to scheduling <span aria-hidden="true">→</span>
+                </button>
             <?php endif; ?>
-        </section>
-    <?php endif; ?>
+        </div>
+    </section>
 <?php endif; ?>
 
-<p class="customer-muted customer-price-note">Only services marked Available with a configured duration can be selected. Service duration and price come from Pawsome's records.</p>
+<?php if ($bookingStep === 2): ?>
+    <p class="customer-muted customer-price-note">Only services marked Available with a configured duration can be selected. Service duration and price come from Pawsome's records.</p>
+<?php endif; ?>
 <script>
     (() => {
         const categoryButtons = Array.from(document.querySelectorAll('.booking-category-toggle'));

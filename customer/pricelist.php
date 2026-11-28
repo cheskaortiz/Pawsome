@@ -88,6 +88,10 @@ require __DIR__ . '/../includes/customer_header.php';
             ?>
             <section class="<?= auth_escape($categoryClass) ?>" aria-label="<?= auth_escape($species . ' ' . $categoryName) ?>">
                 <h3><?= auth_escape($categoryName) ?></h3>
+                <?php $categoryDescription = grooming_service_category_description((string) $categoryName); ?>
+                <?php if ($categoryDescription !== ''): ?>
+                    <p class="customer-pricelist-description"><?= auth_escape($categoryDescription) ?></p>
+                <?php endif; ?>
                 <?php if ($isFlatRate): ?>
                     <?php $columnSize = max(1, (int) ceil(count($categoryServices) / 2)); ?>
                     <div class="customer-price-flat-grid">

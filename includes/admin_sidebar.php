@@ -182,53 +182,55 @@ if (isset($adminDetailBreadcrumbs[$adminCurrentScript])) {
     </nav>
 </aside>
 
-<nav class="admin-breadcrumb-header" aria-label="Breadcrumb">
-    <ol class="admin-breadcrumb-list">
-        <?php foreach ($adminBreadcrumbItems as $index => $breadcrumb): ?>
-            <?php if ($index > 0): ?>
-                <li class="admin-breadcrumb-separator" aria-hidden="true">›</li>
-            <?php endif; ?>
-            <li>
-                <a
-                    href="<?= auth_escape($breadcrumb['href']) ?>"
-                    <?= !empty($breadcrumb['current']) ? 'aria-current="page"' : '' ?>
-                ><?= auth_escape($breadcrumb['label']) ?></a>
-            </li>
-        <?php endforeach; ?>
-    </ol>
-</nav>
+<div class="admin-header-row">
+    <nav class="admin-breadcrumb-header" aria-label="Breadcrumb">
+        <ol class="admin-breadcrumb-list">
+            <?php foreach ($adminBreadcrumbItems as $index => $breadcrumb): ?>
+                <?php if ($index > 0): ?>
+                    <li class="admin-breadcrumb-separator" aria-hidden="true">›</li>
+                <?php endif; ?>
+                <li>
+                    <a
+                        href="<?= auth_escape($breadcrumb['href']) ?>"
+                        <?= !empty($breadcrumb['current']) ? 'aria-current="page"' : '' ?>
+                    ><?= auth_escape($breadcrumb['label']) ?></a>
+                </li>
+            <?php endforeach; ?>
+        </ol>
+    </nav>
 
-<div class="admin-notification-widget" data-admin-notifications data-admin-id="<?= (int) $_SESSION['user_id'] ?>" data-api="notifications.php" data-csrf="<?= auth_escape(auth_csrf_token()) ?>">
-    <button class="admin-theme-toggle" type="button" data-admin-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode">
-        <svg viewBox="0 0 24 24" aria-hidden="true" data-theme-icon="moon">
-            <path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.7 8.7 0 1 0 20.2 15.1Z"></path>
-        </svg>
-        <svg viewBox="0 0 24 24" aria-hidden="true" data-theme-icon="sun" hidden>
-            <circle cx="12" cy="12" r="4"></circle>
-            <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
-        </svg>
-    </button>
-    <button class="admin-notification-bell" type="button" aria-label="Notifications" aria-expanded="false" aria-controls="admin-notification-panel">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12a2 2 0 0 0 4 0"/></svg>
-        <span class="admin-notification-count" data-notification-count hidden></span>
-    </button>
-    <button class="admin-profile-chip" type="button" data-admin-dialog-open="profile">
-        <span class="admin-profile-chip-avatar" aria-hidden="true">
-            <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="currentColor"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M6.5 27c1-5.1 4.5-8 9.5-8s8.5 2.9 9.5 8" fill="#fff"/></svg>
-        </span>
-        <span class="admin-profile-chip-copy">
-            <small>Welcome back</small>
-            <strong class="admin-profile-chip-name"><?= auth_escape($adminSidebarDisplayName) ?></strong>
-        </span>
-    </button>
-    <section class="admin-notification-panel" id="admin-notification-panel" aria-label="Recent notifications" hidden>
-        <header class="admin-notification-heading">
-            <h2>Notifications</h2>
-            <button class="admin-notification-close" type="button" aria-label="Close notifications">&times;</button>
-        </header>
-        <p class="admin-notification-status" data-notification-status role="status" aria-live="polite"></p>
-        <ul class="admin-notification-list" data-notification-list></ul>
-    </section>
+    <div class="admin-notification-widget" data-admin-notifications data-admin-id="<?= (int) $_SESSION['user_id'] ?>" data-api="notifications.php" data-csrf="<?= auth_escape(auth_csrf_token()) ?>">
+        <button class="admin-theme-toggle" type="button" data-admin-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode">
+            <svg viewBox="0 0 24 24" aria-hidden="true" data-theme-icon="moon">
+                <path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.7 8.7 0 1 0 20.2 15.1Z"></path>
+            </svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true" data-theme-icon="sun" hidden>
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
+            </svg>
+        </button>
+        <button class="admin-notification-bell" type="button" aria-label="Notifications" aria-expanded="false" aria-controls="admin-notification-panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12a2 2 0 0 0 4 0"/></svg>
+            <span class="admin-notification-count" data-notification-count hidden></span>
+        </button>
+        <button class="admin-profile-chip" type="button" data-admin-dialog-open="profile">
+            <span class="admin-profile-chip-avatar" aria-hidden="true">
+                <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="currentColor"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M6.5 27c1-5.1 4.5-8 9.5-8s8.5 2.9 9.5 8" fill="#fff"/></svg>
+            </span>
+            <span class="admin-profile-chip-copy">
+                <small>Welcome back</small>
+                <strong class="admin-profile-chip-name"><?= auth_escape($adminSidebarDisplayName) ?></strong>
+            </span>
+        </button>
+        <section class="admin-notification-panel" id="admin-notification-panel" aria-label="Recent notifications" hidden>
+            <header class="admin-notification-heading">
+                <h2>Notifications</h2>
+                <button class="admin-notification-close" type="button" aria-label="Close notifications">&times;</button>
+            </header>
+            <p class="admin-notification-status" data-notification-status role="status" aria-live="polite"></p>
+            <ul class="admin-notification-list" data-notification-list></ul>
+        </section>
+    </div>
 </div>
 
 <dialog class="admin-preferences-dialog" id="admin-profile-dialog" aria-labelledby="admin-profile-dialog-title">

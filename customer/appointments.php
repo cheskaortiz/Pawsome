@@ -138,10 +138,16 @@ try {
 
 require __DIR__ . '/../includes/customer_header.php';
 ?>
-<section class="customer-page-heading">
-    <span class="eyebrow">Grooming plans and visits</span>
-    <h1>My <span>Appointments</span></h1>
-    <p>Appointments connected to your account and your pets.</p>
+<section class="customer-page-heading customer-appointments-heading">
+    <div>
+        <span class="eyebrow">Grooming plans and visits</span>
+        <h1>My <span>Appointments</span></h1>
+        <p>Appointments connected to your account and your pets.</p>
+    </div>
+    <a class="customer-appointments-book-button" href="booking.php">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>
+        <span>Book Now</span>
+    </a>
 </section>
 
 <?php if ($successMessage !== null): ?>
@@ -189,8 +195,10 @@ require __DIR__ . '/../includes/customer_header.php';
                     $statusLabel = isset($statusClasses[$status]) ? $status : 'Status unavailable';
                     $statusClass = $statusClasses[$status] ?? 'unknown';
                     $priceDisplay = appointment_price_display($appointment);
+                    $priceSource = $priceDisplay['is_snapshot'] ? 'Saved at booking' : 'Current service price';
+                    $canBookAgain = in_array($status, ['Completed', 'Cancelled', 'Rejected'], true);
                     ?>
-                    <tr>
+                    <tr id="appointment-<?= (int) $appointment['appointment_id'] ?>">
                         <td>#<?= (int) $appointment['appointment_id'] ?></td>
                         <td>
                             <?= auth_escape(date('M j, Y', strtotime((string) $appointment['appointment_date']))) ?><br>
@@ -198,27 +206,39 @@ require __DIR__ . '/../includes/customer_header.php';
                         </td>
                         <td><?= auth_escape((string) $appointment['pet_name']) ?></td>
                         <td><?= auth_escape((string) $appointment['service_display_name']) ?></td>
-                        <td>
-                            <?= auth_escape($priceDisplay['formatted']) ?>
-                            <span class="customer-muted"><?= auth_escape($priceDisplay['source']) ?></span>
+                        <td class="customer-appointment-price">
+                            <span class="customer-appointment-price-value"><?= auth_escape($priceDisplay['formatted']) ?></span>
+                            <span class="customer-muted customer-appointment-price-source"><?= auth_escape($priceSource) ?></span>
                         </td>
                         <td><span class="customer-status customer-status--<?= auth_escape($statusClass) ?>"><?= auth_escape($statusLabel) ?></span></td>
                         <td>
-                            <?php if ((int) $appointment['can_cancel'] === 1): ?>
-                                <form method="post" action="appointments.php" onsubmit="return confirm('Cancel this appointment?');">
-                                    <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
-                                    <input type="hidden" name="appointment_id" value="<?= (int) $appointment['appointment_id'] ?>">
-                                    <button class="appointment-cancel-button" type="submit">Cancel</button>
-                                </form>
-                            <?php endif; ?>
-                            <?php if ($status === 'Completed'): ?>
-                                <a
-                                    class="appointment-review-link"
-                                    href="<?= !empty($appointment['review_id'])
-                                        ? 'reviews.php?edit=' . (int) $appointment['review_id']
-                                        : 'reviews.php?appointment_id=' . (int) $appointment['appointment_id'] ?>"
-                                ><?= !empty($appointment['review_id']) ? 'Edit Review' : 'Write Review' ?></a>
-                            <?php endif; ?>
+                            <div class="customer-appointment-actions">
+                                <?php if ((int) $appointment['can_cancel'] === 1): ?>
+                                    <form method="post" action="appointments.php" onsubmit="return confirm('Cancel this appointment?');">
+                                        <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
+                                        <input type="hidden" name="appointment_id" value="<?= (int) $appointment['appointment_id'] ?>">
+                                        <button class="appointment-cancel-button" type="submit">Cancel</button>
+                                    </form>
+                                <?php endif; ?>
+                                <?php if ($status === 'Completed'): ?>
+                                    <a
+                                        class="appointment-review-link"
+                                        href="<?= !empty($appointment['review_id'])
+                                            ? 'reviews.php?edit=' . (int) $appointment['review_id']
+                                            : 'reviews.php?appointment_id=' . (int) $appointment['appointment_id'] ?>"
+                                    ><?= !empty($appointment['review_id']) ? 'Edit Review' : 'Write Review' ?></a>
+                                <?php endif; ?>
+                                <?php if ($canBookAgain): ?>
+                                    <form method="post" action="booking.php">
+                                        <input type="hidden" name="csrf_token" value="<?= auth_escape(auth_csrf_token()) ?>">
+                                        <input type="hidden" name="booking_action" value="rebook_appointment">
+                                        <input type="hidden" name="appointment_id" value="<?= (int) $appointment['appointment_id'] ?>">
+                                        <button class="appointment-book-again-button" type="submit">
+                                            <span aria-hidden="true">+</span> Book Again
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>

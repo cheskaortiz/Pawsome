@@ -60,7 +60,7 @@ require __DIR__ . '/../includes/customer_header.php';
 <?php else: ?>
     <div class="customer-pet-grid pet-profile-grid">
         <?php foreach ($pets as $pet): ?>
-            <article class="customer-data-card pet-profile-card">
+            <article class="customer-data-card pet-profile-card" id="pet-profile-<?= (int) $pet['pet_id'] ?>">
                 <?php if (!empty($pet['photo_path'])): ?>
                     <img
                         class="pet-profile-photo"

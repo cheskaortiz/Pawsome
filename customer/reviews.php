@@ -266,7 +266,7 @@ try {
     $statement = $conn->prepare(
         'SELECT r.review_id, r.appointment_id, r.rating, r.feedback, r.status AS review_status,
                 r.created_at, r.updated_at, a.status AS appointment_status, a.appointment_date,
-                p.pet_name,
+                p.pet_name, p.species, p.breed_size, s.category AS service_category,
                 CASE
                     WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
                     THEN CONCAT_WS(\' - \', s.category, s.service_name)
@@ -434,33 +434,73 @@ require __DIR__ . '/../includes/customer_header.php';
         </div>
     <?php else: ?>
         <div class="customer-review-list">
+            <?php
+            $reviewRatingLabels = [
+                1 => 'Not satisfied',
+                2 => 'Could be better',
+                3 => 'It was okay',
+                4 => 'Really liked it',
+                5 => 'Loved it',
+            ];
+            ?>
             <?php foreach ($reviews as $review): ?>
                 <?php
-                $reviewDate = date('M j, Y', strtotime((string) $review['updated_at']));
                 $reviewRating = (int) $review['rating'];
                 $reviewStatus = (string) $review['review_status'];
+                $petName = trim((string) $review['pet_name']);
+                $petInitial = preg_match('/^./u', $petName, $initialMatch) === 1
+                    ? strtoupper($initialMatch[0])
+                    : '?';
+                $petSpecies = $review['species'] === 'Other'
+                    ? 'Other Small Animal'
+                    : (string) $review['species'];
+                $petSizeLabel = trim((string) ($review['breed_size'] ?? '') . ' ' . $petSpecies);
+                $serviceCategory = trim((string) $review['service_category']);
+                if ($serviceCategory === '') {
+                    $serviceCategory = (string) $review['service_display_name'];
+                }
                 ?>
                 <article class="customer-review-card">
                     <header class="customer-review-card-header">
-                        <div>
-                            <h3><?= auth_escape((string) $review['pet_name']) ?> · <?= auth_escape((string) $review['service_display_name']) ?></h3>
-                            <p>Appointment #<?= (int) $review['appointment_id'] ?> · <?= auth_escape(date('M j, Y', strtotime((string) $review['appointment_date']))) ?></p>
+                        <div class="customer-review-card-identity">
+                            <span class="customer-review-pet-avatar" aria-hidden="true"><?= auth_escape($petInitial) ?></span>
+                            <div class="customer-review-card-title">
+                                <h3><?= auth_escape($petName) ?></h3>
+                                <div class="customer-review-tags">
+                                    <span><?= auth_escape($serviceCategory) ?></span>
+                                    <span><?= auth_escape($petSizeLabel) ?></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="customer-review-card-actions">
-                            <span class="customer-review-status is-<?= auth_escape(strtolower($reviewStatus)) ?>"><?= auth_escape($reviewStatus) ?></span>
-                            <?php if ($review['appointment_status'] === 'Completed'): ?>
-                                <a class="customer-review-edit" href="reviews.php?edit=<?= (int) $review['review_id'] ?>">Edit</a>
-                            <?php endif; ?>
-                        </div>
+                        <span class="customer-review-status is-<?= auth_escape(strtolower($reviewStatus)) ?>"><?= auth_escape($reviewStatus) ?></span>
                     </header>
-                    <div class="customer-review-stars" aria-label="<?= $reviewRating ?> out of 5 stars">
-                        <?= str_repeat('★', $reviewRating) ?><span><?= str_repeat('☆', 5 - $reviewRating) ?></span>
+                    <div class="customer-review-rating-row">
+                        <div class="customer-review-stars" aria-label="<?= $reviewRating ?> out of 5 stars">
+                            <?= str_repeat('★', $reviewRating) ?><span><?= str_repeat('☆', 5 - $reviewRating) ?></span>
+                        </div>
+                        <p class="customer-review-rating-label">
+                            <strong><?= $reviewRating ?>/5</strong> · <?= auth_escape($reviewRatingLabels[$reviewRating] ?? 'Rated') ?>
+                        </p>
                     </div>
                     <p class="customer-review-card-feedback"><?= nl2br(auth_escape((string) $review['feedback'])) ?></p>
                     <?php if ($reviewStatus !== 'Approved'): ?>
                         <p class="customer-review-status-note">Your review is private until it is approved.</p>
                     <?php endif; ?>
-                    <p class="customer-review-card-date">Updated <?= auth_escape($reviewDate) ?></p>
+                    <footer class="customer-review-card-footer">
+                        <p class="customer-review-card-date">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
+                            <span>
+                                <?= auth_escape(date('M j, Y', strtotime((string) $review['appointment_date']))) ?>
+                                · Appointment #<?= (int) $review['appointment_id'] ?>
+                            </span>
+                        </p>
+                        <div class="customer-review-card-footer-actions">
+                            <?php if ($review['appointment_status'] === 'Completed'): ?>
+                                <a class="customer-review-edit" href="reviews.php?edit=<?= (int) $review['review_id'] ?>">Edit Review</a>
+                            <?php endif; ?>
+                            <a class="customer-review-details" href="appointments.php#appointment-<?= (int) $review['appointment_id'] ?>">View Details</a>
+                        </div>
+                    </footer>
                 </article>
             <?php endforeach; ?>
         </div>

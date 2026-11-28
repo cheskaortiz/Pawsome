@@ -63,7 +63,6 @@ try {
 require __DIR__ . '/../includes/customer_header.php';
 ?>
 <section class="customer-welcome">
-    <span class="eyebrow">Your Pawsome account</span>
     <h1>Welcome back, <span><?= auth_escape((string) ($_SESSION['first_name'] ?? 'pet parent')) ?></span>!</h1>
     <p>Give your pet a little extra care. Choose a grooming service and book a visit in just a few steps.</p>
     <a class="button button-primary customer-book-button" href="booking.php">
@@ -72,9 +71,14 @@ require __DIR__ . '/../includes/customer_header.php';
 </section>
 
 <section class="customer-dashboard-section" aria-labelledby="dashboard-pets-title">
-    <div class="customer-section-heading">
-        <span class="eyebrow">Your furry family</span>
-        <h2 id="dashboard-pets-title">Your <span>Pets</span></h2>
+    <div class="customer-section-heading customer-dashboard-heading-row">
+        <div>
+            <span class="eyebrow">Your furry family</span>
+            <h2 id="dashboard-pets-title">Your <span>Pets</span></h2>
+        </div>
+        <?php if (!$petLoadError && $pets): ?>
+            <a class="customer-inline-link" href="pets.php">View all <?= count($pets) ?> <?= count($pets) === 1 ? 'pet' : 'pets' ?> <span aria-hidden="true">→</span></a>
+        <?php endif; ?>
     </div>
     <?php if ($petLoadError): ?>
         <p class="customer-alert" role="alert">We couldn't load your pets right now. Please try again later.</p>
@@ -86,8 +90,8 @@ require __DIR__ . '/../includes/customer_header.php';
         </section>
     <?php else: ?>
         <div class="customer-dashboard-pet-grid">
-            <?php foreach (array_slice($pets, 0, 3) as $pet): ?>
-                <article class="customer-dashboard-pet">
+            <?php foreach ($pets as $pet): ?>
+                <a class="customer-dashboard-pet" href="pets.php#pet-profile-<?= (int) $pet['pet_id'] ?>">
                     <?php if (!empty($pet['photo_path'])): ?>
                         <img
                             src="pet-media.php?pet_id=<?= (int) $pet['pet_id'] ?>&amp;type=photo"
@@ -101,10 +105,9 @@ require __DIR__ . '/../includes/customer_header.php';
                         <h3><?= auth_escape((string) $pet['pet_name']) ?></h3>
                         <p><?= auth_escape((string) $pet['species']) ?><?= !empty($pet['breed']) ? ' · ' . auth_escape((string) $pet['breed']) : '' ?></p>
                     </div>
-                </article>
+                </a>
             <?php endforeach; ?>
         </div>
-        <a class="customer-inline-link" href="pets.php">View all <?= count($pets) ?> <?= count($pets) === 1 ? 'pet' : 'pets' ?> <span aria-hidden="true">→</span></a>
     <?php endif; ?>
 </section>
 
@@ -126,7 +129,7 @@ require __DIR__ . '/../includes/customer_header.php';
     <?php else: ?>
         <div class="customer-upcoming-list">
             <?php foreach ($upcomingAppointments as $appointment): ?>
-                <article class="customer-upcoming-card">
+                <a class="customer-upcoming-card" href="appointments.php">
                     <div>
                         <span class="customer-card-kicker">#<?= (int) $appointment['appointment_id'] ?> · <?= auth_escape((string) $appointment['status']) ?></span>
                         <h3><?= auth_escape((string) $appointment['pet_name']) ?> <span>·</span> <?= auth_escape((string) $appointment['service_display_name']) ?></h3>
@@ -136,7 +139,7 @@ require __DIR__ . '/../includes/customer_header.php';
                         <span aria-hidden="true">·</span>
                         <?= auth_escape(date('g:i A', strtotime((string) $appointment['appointment_time']))) ?>
                     </p>
-                </article>
+                </a>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>

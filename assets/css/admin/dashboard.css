@@ -3056,3 +3056,95 @@ body.admin-app .button-primary:hover {
         padding-top: 20px;
     }
 }
+
+body.admin-app .admin-layout {
+    grid-template-areas:
+        "sidebar header"
+        "sidebar main";
+}
+
+body.admin-app .admin-sidebar {
+    grid-area: sidebar;
+}
+
+body.admin-app .admin-header-row {
+    position: relative;
+    z-index: 1099;
+    display: flex;
+    min-width: 0;
+    min-height: 82px;
+    grid-area: header;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-inline: clamp(22px, 3.2vw, 48px);
+    border-bottom: 2px solid var(--line);
+    background: var(--yellow-surface);
+}
+
+body.admin-app .admin-breadcrumb-header {
+    position: static;
+    z-index: auto;
+    top: auto;
+    right: auto;
+    left: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: auto;
+    background: transparent;
+    pointer-events: auto;
+}
+
+body.admin-app .admin-breadcrumb-header::after {
+    display: none;
+}
+
+body.admin-app .admin-notification-widget {
+    position: relative;
+    z-index: 1;
+    top: auto;
+    right: auto;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 10px;
+}
+
+body.admin-app .admin-main {
+    grid-area: main;
+    min-width: 0;
+    padding-top: 0;
+}
+
+@media (max-width: 920px) {
+    body.admin-app .admin-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "sidebar"
+            "header"
+            "main";
+    }
+
+    body.admin-app .admin-header-row {
+        min-height: 52px;
+        padding-inline: 16px;
+    }
+
+    body.admin-app .admin-main {
+        padding-top: 24px;
+    }
+}
+
+@media (max-width: 640px) {
+    body.admin-app .admin-header-row {
+        gap: 8px;
+    }
+
+    body.admin-app .admin-notification-widget {
+        gap: 8px;
+    }
+
+    body.admin-app .admin-main {
+        padding-top: 20px;
+    }
+}
