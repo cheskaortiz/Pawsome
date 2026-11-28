@@ -219,7 +219,8 @@ $reviewLoadError = false;
 try {
     $sql =
         'SELECT r.review_id, r.appointment_id, r.rating, r.feedback, r.status, r.created_at,
-                u.first_name, u.last_name, p.pet_name,
+                u.first_name, u.last_name, p.pet_name, s.category AS service_category,
+                s.service_name,
                 CASE
                     WHEN s.category IN (\'Basic Groom\', \'Premium Groom\')
                     THEN CONCAT_WS(\' - \', s.category, s.service_name)
@@ -300,11 +301,19 @@ $feedbackPreview = static function (string $feedback): string {
 $renderReviewCards = static function (array $reviewRows) use ($csrfToken, $returnUrl, $feedbackPreview): string {
     ob_start();
     ?>
-    <div class="admin-review-cards">
+    <div class="admin-review-list">
         <?php foreach ($reviewRows as $review): ?>
             <?php
             $customerName = trim((string) $review['first_name'] . ' ' . (string) $review['last_name']);
+            $nameParts = preg_split('/\s+/', $customerName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            $customerInitials = '';
+            foreach (array_slice($nameParts, 0, 2) as $namePart) {
+                $customerInitials .= function_exists('mb_substr')
+                    ? mb_substr($namePart, 0, 1, 'UTF-8')
+                    : substr($namePart, 0, 1);
+            }
             $status = (string) $review['status'];
+            $statusLabel = $status === 'Pending' ? 'Pending review' : $status;
             $reviewDate = date('M j, Y', strtotime((string) $review['created_at']));
             $rating = (int) $review['rating'];
             $reviewData = [
@@ -323,21 +332,37 @@ $renderReviewCards = static function (array $reviewRows) use ($csrfToken, $retur
             );
             ?>
             <article class="admin-review-card">
-                <header class="admin-review-card-header">
-                    <div class="admin-review-card-customer">
-                        <h3><?= auth_escape($customerName) ?></h3>
-                        <p><?= auth_escape((string) $review['pet_name']) ?> · <?= auth_escape((string) $review['service_display_name']) ?></p>
+                <header class="admin-review-header">
+                    <div class="admin-review-person">
+                        <span class="admin-review-avatar" aria-hidden="true"><?= auth_escape($customerInitials ?: '?') ?></span>
+                        <div class="admin-review-customer">
+                            <h3><?= auth_escape($customerName) ?></h3>
+                            <div class="admin-review-tags">
+                                <span><?= auth_escape((string) $review['pet_name']) ?></span>
+                                <span><?= auth_escape((string) $review['service_category']) ?></span>
+                                <span><?= auth_escape((string) $review['service_name']) ?></span>
+                            </div>
+                        </div>
                     </div>
-                    <span class="admin-review-status is-<?= strtolower(auth_escape($status)) ?>"><?= auth_escape($status) ?></span>
+                    <span class="admin-review-status is-<?= strtolower(auth_escape($status)) ?>">
+                        <span class="admin-review-status-dot" aria-hidden="true"></span>
+                        <?= auth_escape($statusLabel) ?>
+                    </span>
                 </header>
-                <div class="admin-review-card-rating">
+                <div class="admin-review-rating-row">
                     <span class="admin-review-rating" aria-label="<?= $rating ?> out of 5 stars"><?= str_repeat('★', $rating) ?><span><?= str_repeat('☆', 5 - $rating) ?></span></span>
-                    <span><?= $rating ?> / 5</span>
+                    <strong><?= $rating ?>/5<?= $rating === 5 ? ' · Loved it' : '' ?></strong>
                 </div>
-                <p class="admin-review-card-feedback"><?= nl2br(auth_escape($feedbackPreview((string) $review['feedback']))) ?></p>
-                <footer class="admin-review-card-footer">
-                    <span class="admin-review-card-date"><?= auth_escape($reviewDate) ?> · Appointment #<?= (int) $review['appointment_id'] ?></span>
-                    <div class="admin-review-card-actions">
+                <div class="admin-review-feedback"><?= nl2br(auth_escape($feedbackPreview((string) $review['feedback']))) ?></div>
+                <footer class="admin-review-footer">
+                    <span class="admin-review-date">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                            <path d="M16 3v4M8 3v4M3 10h18"></path>
+                        </svg>
+                        <span><?= auth_escape($reviewDate) ?> · Appointment #<?= (int) $review['appointment_id'] ?></span>
+                    </span>
+                    <div class="admin-review-actions">
                         <button class="admin-review-view-button" type="button" data-review="<?= auth_escape(is_string($reviewJson) ? $reviewJson : '{}') ?>">View Details</button>
                         <?php if ($status === 'Pending'): ?>
                             <?php foreach (['approve' => 'Approve', 'remove' => 'Remove'] as $action => $label): ?>
@@ -398,7 +423,7 @@ if ($isFragmentRequest) {
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/shared/portal.css">
     <link rel="stylesheet" href="../assets/css/admin/dashboard.css">
-    <link rel="stylesheet" href="../assets/css/admin/reviews.css">
+    <link rel="stylesheet" href="../assets/css/admin/reviews.css?v=<?= (int) filemtime(__DIR__ . '/../assets/css/admin/reviews.css') ?>">
 </head>
 <body class="customer-app admin-app admin-reviews-page">
     <a class="skip-link" href="#admin-main">Skip to content</a>

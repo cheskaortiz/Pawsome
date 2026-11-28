@@ -18,6 +18,8 @@ if ($customerId === false) {
 $customer = null;
 $pets = [];
 $appointments = [];
+$groomingHistory = [];
+$reviews = [];
 $loadError = false;
 
 try {
@@ -82,6 +84,64 @@ try {
     $loadError = true;
 }
 
+try {
+    $statement = $conn->prepare(
+        "SELECT gr.record_id, gr.appointment_id, gr.grooming_date, gr.grooming_notes,
+                p.pet_name,
+                CASE
+                    WHEN s.category IN ('Basic Groom', 'Premium Groom')
+                    THEN CONCAT_WS(' - ', s.category, s.service_name)
+                    ELSE s.service_name
+                END AS service_display_name,
+                g.first_name AS groomer_first_name, g.last_name AS groomer_last_name
+         FROM grooming_records AS gr
+         INNER JOIN appointments AS a ON a.appointment_id = gr.appointment_id
+         INNER JOIN pets AS p ON p.pet_id = gr.pet_id AND p.user_id = a.user_id
+         INNER JOIN services AS s ON s.service_id = a.service_id
+         LEFT JOIN users AS g ON g.user_id = gr.groomer_id
+         WHERE a.user_id = ?
+         ORDER BY gr.grooming_date DESC, gr.record_id DESC"
+    );
+    $statement->bind_param('i', $customerId);
+    $statement->execute();
+    $groomingHistory = $statement->get_result()->fetch_all(MYSQLI_ASSOC);
+    $statement->close();
+} catch (mysqli_sql_exception $exception) {
+    error_log('Pawsome admin customer grooming history query failed: ' . $exception->getMessage());
+    $loadError = true;
+}
+
+try {
+    $statement = $conn->prepare(
+        'SELECT r.review_id, r.appointment_id, r.rating, r.feedback, r.status, r.created_at,
+                a.appointment_date, p.pet_name, s.category AS service_category,
+                s.service_name
+         FROM reviews AS r
+         INNER JOIN appointments AS a
+            ON a.appointment_id = r.appointment_id AND a.user_id = r.user_id
+         INNER JOIN pets AS p ON p.pet_id = a.pet_id AND p.user_id = a.user_id
+         INNER JOIN services AS s ON s.service_id = a.service_id
+         WHERE r.user_id = ?
+         ORDER BY r.created_at DESC, r.review_id DESC'
+    );
+    $statement->bind_param('i', $customerId);
+    $statement->execute();
+    $reviews = $statement->get_result()->fetch_all(MYSQLI_ASSOC);
+    $statement->close();
+} catch (mysqli_sql_exception $exception) {
+    error_log('Pawsome admin customer review history query failed: ' . $exception->getMessage());
+    $loadError = true;
+}
+
+$customerName = trim((string) $customer['first_name'] . ' ' . (string) $customer['last_name']);
+$customerNameParts = preg_split('/\s+/', $customerName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+$customerInitials = '';
+foreach (array_slice($customerNameParts, 0, 2) as $namePart) {
+    $customerInitials .= function_exists('mb_substr')
+        ? mb_substr($namePart, 0, 1, 'UTF-8')
+        : substr($namePart, 0, 1);
+}
+
 $statusClasses = [
     'Pending' => 'pending',
     'Confirmed' => 'confirmed',
@@ -132,7 +192,7 @@ $statusClasses = [
                 <section class="customer-page-heading admin-page-heading admin-customer-detail-heading">
                     <div>
                         <span class="eyebrow">Customer profile</span>
-                        <h1><?= auth_escape(trim((string) $customer['first_name'] . ' ' . (string) $customer['last_name'])) ?> <span>#<?= (int) $customerId ?></span></h1>
+                        <h1><?= auth_escape($customerName) ?> <span>#<?= (int) $customerId ?></span></h1>
                         <p>Review the customer's account, registered pets, and booking history.</p>
                     </div>
                 </section>
@@ -147,10 +207,11 @@ $statusClasses = [
                             <span class="eyebrow">Account</span>
                             <h2 id="customer-information-title">Customer Information</h2>
                         </div>
+                        <span class="admin-customer-avatar admin-customer-detail-avatar" aria-hidden="true"><?= auth_escape($customerInitials ?: '?') ?></span>
                     </div>
                     <dl class="admin-customer-detail-list">
-                        <div><dt>Full name</dt><dd><?= auth_escape(trim((string) $customer['first_name'] . ' ' . (string) $customer['last_name'])) ?></dd></div>
-                        <div><dt>Email</dt><dd><?= auth_escape((string) $customer['email']) ?></dd></div>
+                        <div><dt>Full name</dt><dd><?= auth_escape($customerName) ?></dd></div>
+                        <div><dt>Email</dt><dd><a href="mailto:<?= auth_escape((string) $customer['email']) ?>"><?= auth_escape((string) $customer['email']) ?></a></dd></div>
                         <div><dt>Phone number</dt><dd><?= auth_escape(trim((string) ($customer['phone'] ?? '')) ?: 'Not provided') ?></dd></div>
                         <div><dt>Username</dt><dd><?= auth_escape((string) $customer['username']) ?></dd></div>
                         <div><dt>Registration date</dt><dd><?= auth_escape(date('M j, Y · g:i A', strtotime((string) $customer['created_at']))) ?></dd></div>
@@ -270,6 +331,115 @@ $statusClasses = [
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
+                        </div>
+                    <?php endif; ?>
+                </section>
+
+                <section class="admin-panel admin-customer-detail-card" aria-labelledby="grooming-history-title">
+                    <div class="admin-panel-heading">
+                        <div>
+                            <span class="eyebrow">Completed care</span>
+                            <h2 id="grooming-history-title">Grooming History</h2>
+                        </div>
+                        <span class="admin-panel-count"><?= count($groomingHistory) ?></span>
+                    </div>
+                    <?php if (!$groomingHistory): ?>
+                        <p class="admin-customer-empty">This customer has no grooming history.</p>
+                    <?php else: ?>
+                        <div class="admin-table-scroll">
+                            <table class="admin-table admin-customer-history-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Pet</th>
+                                        <th scope="col">Service</th>
+                                        <th scope="col">Groomer</th>
+                                        <th scope="col">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($groomingHistory as $record): ?>
+                                        <?php $groomerName = trim((string) ($record['groomer_first_name'] ?? '') . ' ' . (string) ($record['groomer_last_name'] ?? '')); ?>
+                                        <tr>
+                                            <td><?= auth_escape(date('M j, Y', strtotime((string) $record['grooming_date']))) ?></td>
+                                            <td><strong><?= auth_escape((string) $record['pet_name']) ?></strong></td>
+                                            <td><?= auth_escape((string) $record['service_display_name']) ?></td>
+                                            <td><?= auth_escape($groomerName ?: 'Not assigned') ?></td>
+                                            <td><?= auth_escape(trim((string) ($record['grooming_notes'] ?? '')) ?: '—') ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </section>
+
+                <section class="admin-panel admin-customer-detail-card" aria-labelledby="customer-reviews-title">
+                    <div class="admin-panel-heading">
+                        <div>
+                            <span class="eyebrow">Customer feedback</span>
+                            <h2 id="customer-reviews-title">Submitted Reviews</h2>
+                        </div>
+                        <span class="admin-panel-count"><?= count($reviews) ?></span>
+                    </div>
+                    <?php if (!$reviews): ?>
+                        <p class="admin-customer-empty">This customer has not submitted any reviews.</p>
+                    <?php else: ?>
+                        <div class="admin-customer-review-list">
+                            <?php foreach ($reviews as $review): ?>
+                                <?php
+                                $petName = (string) $review['pet_name'];
+                                $petInitial = function_exists('mb_substr')
+                                    ? mb_substr($petName, 0, 1, 'UTF-8')
+                                    : substr($petName, 0, 1);
+                                $rating = max(0, min(5, (int) $review['rating']));
+                                $reviewStatus = (string) $review['status'];
+                                $reviewStatusClasses = [
+                                    'Pending' => 'pending',
+                                    'Approved' => 'approved',
+                                    'Removed' => 'removed',
+                                ];
+                                $reviewStatusClass = $reviewStatusClasses[$reviewStatus] ?? 'unknown';
+                                $reviewFeedback = trim((string) ($review['feedback'] ?? ''));
+                                ?>
+                                <article class="admin-customer-review">
+                                    <header class="admin-customer-review-header">
+                                        <div class="admin-customer-review-pet">
+                                            <span class="admin-customer-review-avatar" aria-hidden="true"><?= auth_escape($petInitial ?: '?') ?></span>
+                                            <div>
+                                                <h3><?= auth_escape($petName) ?></h3>
+                                                <div class="admin-customer-review-tags">
+                                                    <?php if (!empty($review['service_category'])): ?>
+                                                        <span><?= auth_escape((string) $review['service_category']) ?></span>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($review['service_name'])): ?>
+                                                        <span><?= auth_escape((string) $review['service_name']) ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span class="admin-customer-review-status is-<?= auth_escape($reviewStatusClass) ?>">
+                                            <span class="admin-customer-review-status-dot" aria-hidden="true"></span>
+                                            <?= auth_escape($reviewStatus) ?>
+                                        </span>
+                                    </header>
+                                    <div class="admin-customer-review-rating">
+                                        <span aria-label="<?= $rating ?> out of 5 stars"><?= str_repeat('★', $rating) ?><span><?= str_repeat('☆', 5 - $rating) ?></span></span>
+                                        <strong><?= $rating ?>/5<?= $rating === 5 ? ' · Loved it' : '' ?></strong>
+                                    </div>
+                                    <p class="admin-customer-review-feedback"><?= nl2br(auth_escape($reviewFeedback !== '' ? $reviewFeedback : 'No written feedback submitted.')) ?></p>
+                                    <footer class="admin-customer-review-footer">
+                                        <span class="admin-customer-review-date">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                                                <path d="M16 3v4M8 3v4M3 10h18"></path>
+                                            </svg>
+                                            <span><?= auth_escape(date('M j, Y', strtotime((string) $review['appointment_date']))) ?> · Appointment #<?= (int) $review['appointment_id'] ?></span>
+                                        </span>
+                                        <a class="admin-customer-review-details" href="reviews.php">View Details</a>
+                                    </footer>
+                                </article>
+                            <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
                 </section>
