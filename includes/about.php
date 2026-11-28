@@ -11,7 +11,7 @@
             <h2>A little more ease for <span>pet parents.</span></h2>
             <p>Pawsome brings grooming appointments and your pet's care details together in one friendly place.</p>
             <p>Find a service, share the details that matter, and make a plan for their next fresh-and-fluffy day.</p>
-            <a class="text-link about-link" href="customer/register.php">Get started with Pawsome <span aria-hidden="true">→</span></a>
+            <a class="button button-primary about-link" href="customer/register.php">Get started with Pawsome <span aria-hidden="true">→</span></a>
         </div>
     </div>
 </section>

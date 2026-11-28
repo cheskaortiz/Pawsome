@@ -1,31 +1,31 @@
 .about-section {
     overflow: hidden;
-    background: var(--yellow-surface);
+    background: var(--color-page-cream);
 }
 
 .about-layout {
     display: grid;
     grid-template-columns: .9fr 1.1fr;
     align-items: center;
-    gap: 78px;
+    gap: 54px;
 }
 
 .about-highlight {
     position: relative;
     overflow: hidden;
     min-height: 310px;
-    padding: 48px 42px;
-    border: 1px solid rgba(255, 255, 255, .9);
-    border-radius: 24px;
-    background: var(--yellow-pale);
-    box-shadow: var(--shadow);
+    padding: 42px;
+    border: 1px solid rgba(255, 255, 255, .72);
+    border-radius: var(--radius-card);
+    background: var(--color-sunny-yellow);
+    box-shadow: var(--shadow-soft);
 }
 
 .about-highlight-mark {
     position: absolute;
     right: 23px;
     bottom: -48px;
-    color: rgba(255, 255, 255, .68);
+    color: rgba(255, 255, 255, .72);
     font-size: 190px;
     line-height: 1;
 }
@@ -42,20 +42,20 @@
     margin: 13px 0 12px;
     font-family: var(--font-heading);
     font-size: clamp(30px, 3.4vw, 40px);
-    font-weight: 900;
-    letter-spacing: -1.3px;
+    font-weight: 700;
+    letter-spacing: -.8px;
     line-height: 1.15;
 }
 
 .about-highlight h2 span,
 .about-copy h2 span {
-    color: var(--blue-deep);
+    color: var(--color-primary-blue);
 }
 
 .about-highlight p {
     max-width: 300px;
     margin: 0;
-    color: var(--ink-soft);
+    color: var(--color-text-yellow);
     font-size: 14px;
     line-height: 1.8;
 }
@@ -66,14 +66,18 @@
 
 .about-copy p {
     margin-bottom: 14px;
-    color: var(--ink-soft);
+    color: var(--color-text-body);
     font-size: 14px;
     line-height: 1.85;
 }
 
 .about-link {
     margin-top: 9px;
-    color: var(--blue-deep);
+    text-decoration: none;
+}
+
+.about-link:hover {
+    color: var(--color-white);
 }
 
 @media (max-width: 900px) {

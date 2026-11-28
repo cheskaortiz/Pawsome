@@ -11,7 +11,7 @@ $currentYear = date('Y');
     <title>Pawsome | A little extra love for your pet</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/about.css">
     <link rel="stylesheet" href="assets/css/booking.css">
@@ -49,11 +49,6 @@ $currentYear = date('Y');
 
     <main id="main-content">
         <section class="hero section-shell">
-            <div class="hero-shop" aria-hidden="true">
-                <div class="shop-window"></div>
-                <div class="shop-shelf shop-shelf-left"><span></span><span></span><span></span></div>
-                <div class="shop-shelf shop-shelf-right"><span></span><span></span><span></span></div>
-            </div>
             <div class="container hero-container">
                 <form class="hero-search" id="service-search-form" action="#services" role="search">
                     <div class="hero-search-field">
@@ -208,7 +203,7 @@ $currentYear = date('Y');
                         <h2>Ready for a little<br>more <span>tail-wagging?</span></h2>
                         <p>Create your Pawsome account and make your pet's next grooming day easy to plan.</p>
                         <div class="cta-actions">
-                            <a class="button button-white" href="customer/register.php">Join Pawsome <span aria-hidden="true">→</span></a>
+                            <a class="button button-accent" href="customer/register.php">Join Pawsome <span aria-hidden="true">→</span></a>
                             <a class="cta-login-link" href="customer/login.php">Already have an account? Log in</a>
                         </div>
                     </div>

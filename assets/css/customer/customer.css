@@ -382,43 +382,43 @@
 
 .customer-status {
     display: inline-block;
-    padding: 4px 9px;
-    border-radius: 99px;
-    color: #466881;
-    background: #e8f3fa;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    color: var(--status-unknown-text);
+    background: var(--status-unknown-bg);
     font-size: 11px;
     font-weight: 700;
 }
 
 .customer-status--pending {
-    color: #765a20;
-    background: #fff3cc;
+    color: var(--status-pending-text);
+    background: var(--status-pending-bg);
 }
 
 .customer-status--confirmed {
-    color: #315d78;
-    background: #e4f2fb;
+    color: var(--status-confirmed-text);
+    background: var(--status-confirmed-bg);
 }
 
 .customer-status--in-progress {
-    color: #315d78;
-    background: #dceef8;
+    color: var(--status-in-progress-text);
+    background: var(--status-in-progress-bg);
 }
 
 .customer-status--ready-for-pickup {
-    color: #285d38;
-    background: #e5f5e9;
+    color: var(--status-ready-text);
+    background: var(--status-ready-bg);
 }
 
 .customer-status--completed {
-    color: #285d38;
-    background: #e5f5e9;
+    color: var(--status-completed-text);
+    background: var(--status-completed-bg);
 }
 
 .customer-status--cancelled,
 .customer-status--rejected {
-    color: #843d35;
-    background: #fbe9e6;
+    color: var(--status-cancelled-text);
+    background: var(--status-cancelled-bg);
 }
 
 .appointment-cancel-button {
@@ -512,16 +512,106 @@
     margin: 16px 0 0;
 }
 
-.customer-pricelist-category + .customer-pricelist-category {
+.customer-pricelist-species + .customer-pricelist-species {
     margin-top: 36px;
 }
 
+.customer-pricelist-species > .customer-section-heading {
+    margin-bottom: 18px;
+}
+
+.customer-pricelist-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 18px;
+}
+
+.customer-pricelist-category {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-cream-border);
+    border-radius: var(--radius-card);
+    background: var(--color-white);
+    box-shadow: var(--shadow-soft);
+}
+
+.customer-pricelist-category--flat-rate,
+.customer-pricelist-category--size-dependent {
+    grid-column: 1 / -1;
+}
+
+.customer-pricelist-category > h3 {
+    margin: 0;
+    padding: 16px 20px;
+    color: var(--color-ink);
+    background: var(--color-cream-light);
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.customer-pricelist-category--flat-rate > h3 {
+    color: var(--color-white);
+    background: var(--color-primary-blue);
+}
+
+.customer-pricelist-category--basic-groom > h3 {
+    color: var(--color-text-blue);
+    background: var(--color-tint-blue);
+}
+
+.customer-pricelist-category--premium-groom > h3 {
+    color: var(--color-text-lavender);
+    background: var(--color-tint-lavender);
+}
+
+.customer-price-flat-grid,
+.customer-price-size-grid {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+}
+
+.customer-price-flat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.customer-price-size-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.customer-price-size-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-cream-border);
+    border-radius: 18px;
+    background: var(--color-white);
+}
+
+.customer-price-size-card h4 {
+    margin: 0;
+    padding: 12px 14px;
+    color: var(--color-text-blue);
+    background: var(--color-tint-blue);
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.customer-price-size-card:nth-child(2) h4 {
+    color: var(--color-text-mint);
+    background: var(--color-tint-mint);
+}
+
+.customer-price-size-card:nth-child(3) h4 {
+    color: var(--color-text-coral);
+    background: var(--color-tint-coral);
+}
+
 .customer-price-table-wrap {
+    min-width: 0;
     overflow-x: auto;
-    border: 1px solid #eee6ce;
-    border-radius: 14px;
-    background: #fff;
-    box-shadow: 0 8px 25px rgba(74, 81, 89, .05);
 }
 
 .customer-price-table {
@@ -531,27 +621,40 @@
     text-align: left;
 }
 
+.customer-price-size-card .customer-price-table {
+    min-width: 0;
+}
+
 .customer-price-table th,
 .customer-price-table td {
-    padding: 14px 18px;
-    border-bottom: 1px solid #eee9dc;
+    padding: 13px 15px;
+    border-bottom: 1px solid var(--color-cream-border-soft);
 }
 
 .customer-price-table th {
-    color: var(--ink);
-    background: var(--yellow-strong);
+    color: var(--color-ink);
+    background: var(--color-cream-light);
     font-family: var(--font-heading);
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 600;
+}
+
+.customer-pricelist-category--flat-rate .customer-price-table th {
+    color: var(--color-text-blue);
+    background: var(--color-tint-blue);
 }
 
 .customer-price-table td {
-    color: #59636b;
+    color: var(--color-text-body);
     font-size: 13px;
 }
 
 .customer-price-table tbody tr:nth-child(even) td {
-    background: #fffaf0;
+    background: var(--color-cream-light);
+}
+
+.customer-price-table tbody tr:hover td {
+    background: var(--color-tint-blue);
 }
 
 .customer-price-table th:nth-child(2),
@@ -571,8 +674,13 @@
     border-bottom: 0;
 }
 
+.customer-price-table td:last-child {
+    color: var(--color-primary-blue);
+    font-weight: 800;
+}
+
 .customer-price-size {
-    color: #737a80;
+    color: var(--color-text-muted);
     font-size: 11px;
 }
 
@@ -1572,5 +1680,27 @@
 
     .customer-table {
         min-width: 900px;
+    }
+
+    .customer-pricelist-grid,
+    .customer-price-flat-grid,
+    .customer-price-size-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-price-flat-grid,
+    .customer-price-size-grid {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .customer-pricelist-category > h3 {
+        padding: 14px 16px;
+    }
+
+    .customer-price-table th,
+    .customer-price-table td {
+        padding: 12px 13px;
+        font-size: 12px;
     }
 }

@@ -1,5 +1,5 @@
 .booking-section {
-    background: #fff;
+    background: var(--color-white);
 }
 
 .booking-steps {
@@ -14,14 +14,26 @@
 .booking-step {
     min-height: 220px;
     padding: 24px 20px;
-    border: 1px solid var(--blue-medium);
-    border-radius: 18px;
-    background: #fff;
-    box-shadow: 0 8px 25px rgba(74, 81, 89, .08);
+    border: 1px solid var(--color-cream-border);
+    border-radius: var(--radius-card);
+    background: var(--color-tint-blue);
+    box-shadow: var(--shadow-soft);
 }
 
-.booking-step:nth-child(even) {
-    border-color: var(--yellow-strong);
+.booking-step:nth-child(2) {
+    background: var(--color-tint-yellow);
+}
+
+.booking-step:nth-child(3) {
+    background: var(--color-tint-mint);
+}
+
+.booking-step:nth-child(4) {
+    background: var(--color-tint-coral);
+}
+
+.booking-step:nth-child(5) {
+    background: var(--color-tint-lavender);
 }
 
 .booking-step-number {
@@ -31,29 +43,41 @@
     margin-bottom: 19px;
     place-items: center;
     border-radius: 14px;
-    color: var(--ink-on-blue);
-    background: var(--blue);
+    color: var(--color-white);
+    background: var(--color-primary-blue);
     font-family: var(--font-heading);
     font-size: 15px;
-    font-weight: 900;
+    font-weight: 700;
 }
 
-.booking-step:nth-child(even) .booking-step-number {
-    color: var(--ink);
-    background: var(--yellow-strong);
+.booking-step:nth-child(2) .booking-step-number {
+    color: var(--color-text-yellow);
+    background: var(--color-sunny-yellow);
+}
+
+.booking-step:nth-child(3) .booking-step-number {
+    background: var(--color-accent-mint);
+}
+
+.booking-step:nth-child(4) .booking-step-number {
+    background: var(--color-accent-coral);
+}
+
+.booking-step:nth-child(5) .booking-step-number {
+    background: var(--color-accent-lavender);
 }
 
 .booking-step h3 {
     margin: 0 0 9px;
     font-family: var(--font-heading);
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.35;
 }
 
 .booking-step p {
     margin: 0;
-    color: var(--ink-soft);
+    color: var(--color-text-body);
     font-size: 12px;
     line-height: 1.7;
 }
@@ -78,14 +102,14 @@
     .booking-step {
         min-height: 0;
         padding: 19px 16px;
-        border-radius: 15px;
+        border-radius: var(--radius-card);
     }
 
     .booking-step-number {
         width: 37px;
         height: 37px;
         margin-bottom: 14px;
-        border-radius: 12px;
+        border-radius: 16px;
         font-size: 13px;
     }
 
